@@ -1,0 +1,5 @@
+{
+  "name": "VidParse Pro",
+  "description": "专业的视频解析与帧处理工具，支持B站/油管解析、多种格式预览及单帧下载。",
+  "requestFramePermissions": []
+}
