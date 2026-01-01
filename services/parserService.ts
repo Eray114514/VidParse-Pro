@@ -15,27 +15,41 @@ export const parseVideoInput = async (input: string): Promise<ParsedVideoData> =
   // 1. Resolve b23.tv short links
   if (url.includes('b23.tv')) {
     try {
-      // Cache buster
+      // Cache buster to avoid stale redirects
       const resolveUrl = `${PROXY_JSON}${encodeURIComponent(url)}&t=${Date.now()}`;
       const response = await fetch(resolveUrl);
       const data = await response.json();
-      if (data.status?.url) {
+      
+      // Case A: Proxy followed redirect and gave us the final URL
+      if (data.status?.url && !data.status.url.includes('b23.tv')) {
         url = data.status.url;
-      } else if (data.contents) {
-         const match = data.contents.match(/(BV[a-zA-Z0-9]{10})/);
-         if (match) bvid = match[1];
+      } 
+      // Case B: Proxy returned the redirection page content (e.g. "click here to redirect" or meta refresh)
+      else if (data.contents) {
+         // Attempt to find a standard Bilibili URL in the HTML content
+         const urlMatch = data.contents.match(/https?:\/\/(?:www|m)\.bilibili\.com\/video\/(BV[a-zA-Z0-9]{10})/);
+         if (urlMatch) {
+             url = urlMatch[0];
+             bvid = urlMatch[1];
+         } else {
+             // Fallback: Just look for any BV id in the mess
+             const rawBvMatch = data.contents.match(/(BV[a-zA-Z0-9]{10})/);
+             if (rawBvMatch) bvid = rawBvMatch[1];
+         }
       }
     } catch (e) {
       console.warn("Failed to resolve b23.tv link", e);
     }
   }
 
-  // 2. Extract IDs (BV, AV)
-  const bvMatch = url.match(/(BV[a-zA-Z0-9]{10})/);
-  const avMatch = url.match(/(?:av)([0-9]+)/);
-  
-  if (bvMatch) bvid = bvMatch[1];
-  else if (avMatch) avid = avMatch[1];
+  // 2. Extract IDs (BV, AV) - Redundant check if bvid already found in step 1, but safe
+  if (!bvid) {
+      const bvMatch = url.match(/(BV[a-zA-Z0-9]{10})/);
+      const avMatch = url.match(/(?:av)([0-9]+)/);
+      
+      if (bvMatch) bvid = bvMatch[1];
+      else if (avMatch) avid = avMatch[1];
+  }
 
   if (bvid || avid) {
     // A. Fetch Metadata (Title, Cover)
@@ -53,7 +67,6 @@ export const parseVideoInput = async (input: string): Promise<ParsedVideoData> =
     }
 
     // B. Fetch Direct Stream URL via Injahow API
-    // IMPORTANT: Add cache buster (t=...) to avoid 403 or cached failures from proxy
     let directUrl = '';
     let parseError = false;
 
@@ -91,11 +104,6 @@ export const parseVideoInput = async (input: string): Promise<ParsedVideoData> =
     const duration = metaData.duration ? formatDuration(metaData.duration) : '';
 
     // C. Construct Response
-    // Priority: Native MP4. 
-    // If Native failed, only return Iframe IF we absolutely have no other choice, 
-    // but ideally we should prompt user to retry if they hate Iframes.
-    // However, for stability, we keep iframe as fallback but log the failure.
-    
     if (directUrl) {
         return {
             id: bvid || avid,
@@ -116,8 +124,6 @@ export const parseVideoInput = async (input: string): Promise<ParsedVideoData> =
             ]
         };
     } else if (parseError) {
-        // Fallback but with explicit "Retry" or different handling could go here.
-        // For now, we still fall back to iframe but since we added timestamp, directUrl should work more often.
          console.log("Falling back to iframe due to parser error.");
     }
 

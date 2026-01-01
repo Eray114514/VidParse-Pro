@@ -22,21 +22,20 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({ url, poster, playerType, clas
   const [downloadProgress, setDownloadProgress] = useState(0);
   const [isDownloading, setIsDownloading] = useState(false);
   const [blobUrl, setBlobUrl] = useState<string | null>(null);
-  const [useDirectStream, setUseDirectStream] = useState(false); // Fallback mode
+  const [useDirectStream, setUseDirectStream] = useState(false); 
   
   // Screenshot State
   const [capturedImage, setCapturedImage] = useState<string | null>(null);
 
-  // 1. Handle URL Changes & Download Logic
+  // ... (Logic remains largely the same, focusing on UI update in return)
+  
   useEffect(() => {
-    // Reset states
     setIsPlaying(false);
     setCurrentTime(0);
     setDownloadProgress(0);
     setCapturedImage(null);
     setUseDirectStream(false);
     
-    // Revoke old blob to free memory
     if (blobUrl) {
       URL.revokeObjectURL(blobUrl);
       setBlobUrl(null);
@@ -44,19 +43,17 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({ url, poster, playerType, clas
 
     if (playerType === 'iframe') return;
 
-    // Start Download
     const controller = new AbortController();
     let isAborted = false;
 
     const fetchVideo = async () => {
       setIsDownloading(true);
       try {
-        // Add timestamp to prevent caching issues with proxy
         const fetchUrl = url.includes('?') ? `${url}&t=${Date.now()}` : `${url}?t=${Date.now()}`;
         
         const response = await fetch(fetchUrl, {
             signal: controller.signal,
-            referrerPolicy: "no-referrer" // Crucial for Bilibili
+            referrerPolicy: "no-referrer"
         });
 
         if (!response.ok) throw new Error("Network response was not ok");
@@ -77,12 +74,12 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({ url, poster, playerType, clas
             chunks.push(value);
             loaded += value.length;
             if (total > 0) {
-              setDownloadProgress(Math.min((loaded / total) * 100, 99)); // Cap at 99 until done
+              setDownloadProgress(Math.min((loaded / total) * 100, 99));
             }
           }
         }
 
-        const blob = new Blob(chunks, { type: 'video/mp4' }); // Assume MP4 for simplicity
+        const blob = new Blob(chunks, { type: 'video/mp4' });
         const objectUrl = URL.createObjectURL(blob);
         
         if (!isAborted) {
@@ -94,8 +91,7 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({ url, poster, playerType, clas
         if (err.name === 'AbortError') {
              console.log("Download cancelled");
         } else {
-            console.warn("Blob download failed (likely CORS), falling back to direct stream:", err);
-            // Auto fallback to direct stream
+            console.warn("Blob download failed, falling back to stream:", err);
             if (!isAborted) {
                 setUseDirectStream(true);
                 setIsDownloading(false);
@@ -112,39 +108,25 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({ url, poster, playerType, clas
     };
   }, [url, playerType]);
 
-  // 2. Playback Controls
   const togglePlay = useCallback((e?: React.MouseEvent) => {
     if (playerType === 'iframe') return;
-    
-    // If event is passed, check if we need to stop it
     if (e) {
-       // Prevent toggling if clicking on controls inside the container
        const target = e.target as HTMLElement;
-       if (target.closest('button') || target.closest('input')) {
-           return;
-       }
+       if (target.closest('button') || target.closest('input')) return;
     }
-
     if (videoRef.current) {
-      if (isPlaying) {
-        videoRef.current.pause();
-      } else {
-        videoRef.current.play();
-      }
+      if (isPlaying) videoRef.current.pause();
+      else videoRef.current.play();
       setIsPlaying(!isPlaying);
     }
   }, [isPlaying, playerType]);
 
   const handleTimeUpdate = () => {
-    if (videoRef.current) {
-      setCurrentTime(videoRef.current.currentTime);
-    }
+    if (videoRef.current) setCurrentTime(videoRef.current.currentTime);
   };
 
   const handleLoadedMetadata = () => {
-    if (videoRef.current) {
-      setDuration(videoRef.current.duration);
-    }
+    if (videoRef.current) setDuration(videoRef.current.duration);
   };
 
   const handleSeek = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -160,9 +142,7 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({ url, poster, playerType, clas
       setIsDownloading(false);
   };
 
-  // 3. New Screenshot Strategy (Native Canvas)
   const captureFrame = useCallback((e: React.MouseEvent) => {
-    // CRITICAL: Stop propagation to prevent video from toggling play/pause
     e.stopPropagation();
     e.preventDefault();
 
@@ -176,25 +156,21 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({ url, poster, playerType, clas
         if (ctx) {
             try {
                 ctx.drawImage(video, 0, 0);
-                // This will fail if video is from remote source (Direct Stream) without CORS headers
                 const dataUrl = canvas.toDataURL('image/png');
-                
                 setCapturedImage(dataUrl);
                 
-                // Pause if not already paused (optional, based on preference, but user paused manually usually)
                 if (!video.paused) {
                     video.pause();
                     setIsPlaying(false);
                 }
 
-                // Smooth scroll to preview
                 setTimeout(() => {
                     document.getElementById('capture-preview')?.scrollIntoView({ behavior: 'smooth' });
                 }, 100);
 
             } catch (err) {
                 console.error("Screenshot failed:", err);
-                alert("无法截取当前画面。\n\n原因：正在使用【流媒体直连模式】播放，且源视频服务器未返回跨域许可(CORS)。\n\n建议：等待视频【完全缓存/下载】后再尝试截取。");
+                alert("当前模式不支持截帧 (CORS限制)。请等待缓存完成。");
             }
         }
     }
@@ -204,7 +180,7 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({ url, poster, playerType, clas
     if (!capturedImage) return;
     const link = document.createElement('a');
     link.href = capturedImage;
-    link.download = `vidparse_frame_${Math.floor(currentTime)}.png`;
+    link.download = `frame_${Math.floor(currentTime)}.png`;
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
@@ -216,34 +192,28 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({ url, poster, playerType, clas
     return `${minutes}:${seconds < 10 ? '0' : ''}${seconds}`;
   };
 
-  // Determine active source
-  // If Blob is ready, use it. If DirectStream fallback active, use raw URL.
-  // If still downloading, we don't show the video source yet (or we could show loading).
   const activeSrc = blobUrl || (useDirectStream ? url : undefined);
   const showLoadingOverlay = isDownloading && !blobUrl && !useDirectStream;
 
   return (
-    <div className={`flex flex-col gap-4 ${className}`}>
+    <div className={`flex flex-col gap-6 ${className}`}>
+        {/* Main Player Container */}
         <div 
-          className="relative group bg-black rounded-xl overflow-hidden shadow-2xl aspect-video bg-gray-900"
+          className="relative group w-full aspect-video bg-black overflow-hidden shadow-2xl"
           onMouseEnter={() => setIsHovering(true)}
           onMouseLeave={() => setIsHovering(false)}
-          onClick={togglePlay} // Play/Pause on container click
+          onClick={togglePlay}
         >
-          {/* 1. Iframe Player */}
           {playerType === 'iframe' && (
-              <div className="w-full h-full">
-                <iframe 
-                  src={url} 
-                  className="w-full h-full border-0" 
-                  allowFullScreen 
-                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                  referrerPolicy="no-referrer"
-                />
-              </div>
+              <iframe 
+                src={url} 
+                className="w-full h-full border-0" 
+                allowFullScreen 
+                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                referrerPolicy="no-referrer"
+              />
           )}
 
-          {/* 2. Native Player */}
           {playerType === 'native' && (
              <>
                 {activeSrc && (
@@ -252,29 +222,29 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({ url, poster, playerType, clas
                         src={activeSrc}
                         poster={poster}
                         className="w-full h-full object-contain"
-                        // Important: No-referrer for direct link streaming
                         referrerPolicy="no-referrer" 
                         onTimeUpdate={handleTimeUpdate}
                         onLoadedMetadata={handleLoadedMetadata}
-                        // Remove onClick from video here because parent handles it, preventing double toggle
                         onEnded={() => setIsPlaying(false)}
                         playsInline
                     />
                 )}
                 
-                {/* Download/Loading Overlay */}
                 {showLoadingOverlay && (
-                    <div className="absolute inset-0 flex flex-col items-center justify-center bg-black/60 backdrop-blur-sm z-10 p-6 text-center" onClick={(e) => e.stopPropagation()}>
-                        <Icons.Loader className="w-10 h-10 text-primary-400 animate-spin mb-4" />
-                        <h3 className="text-white font-medium text-lg mb-2">正在缓存视频资源... {Math.round(downloadProgress)}%</h3>
-                        <p className="text-gray-300 text-sm mb-6 max-w-md">
-                            我们将视频下载到浏览器内存中，以提供流畅的拖拽体验和高质量截图。
-                        </p>
+                    <div className="absolute inset-0 flex flex-col items-center justify-center bg-slate-900/80 backdrop-blur-md z-20 p-6 text-center" onClick={(e) => e.stopPropagation()}>
+                        <div className="relative mb-4">
+                            <div className="absolute inset-0 bg-primary-500 rounded-full blur opacity-40 animate-pulse"></div>
+                            <Icons.Loader className="relative w-12 h-12 text-primary-400 animate-spin" />
+                        </div>
+                        <h3 className="text-white font-bold text-xl mb-2 tracking-tight">正在极速缓存... {Math.round(downloadProgress)}%</h3>
+                        <div className="w-64 h-1.5 bg-gray-700 rounded-full overflow-hidden mb-6">
+                            <div className="h-full bg-gradient-to-r from-primary-500 to-purple-500 transition-all duration-300" style={{ width: `${downloadProgress}%` }}></div>
+                        </div>
                         <button 
                             onClick={(e) => { e.stopPropagation(); skipDownload(); }}
-                            className="px-4 py-2 bg-white/10 hover:bg-white/20 text-white rounded-lg text-sm border border-white/20 transition-all"
+                            className="text-gray-400 hover:text-white text-xs underline underline-offset-4 transition-colors"
                         >
-                            跳过等待，直接播放 (可能卡顿)
+                            跳过缓存 (流媒体播放)
                         </button>
                     </div>
                 )}
@@ -283,106 +253,110 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({ url, poster, playerType, clas
 
           <canvas ref={canvasRef} className="hidden" />
 
-          {/* Controls Overlay (Native Only) */}
+          {/* Controls Overlay */}
           {playerType === 'native' && !showLoadingOverlay && (
             <div 
-                className={`absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/90 to-transparent p-4 transition-opacity duration-300 ${isHovering || !isPlaying ? 'opacity-100' : 'opacity-0'}`}
-                onClick={(e) => e.stopPropagation()} // Stop bubbling from controls area
+                className={`absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/90 via-black/50 to-transparent pt-12 pb-4 px-6 transition-all duration-500 ${isHovering || !isPlaying ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'}`}
+                onClick={(e) => e.stopPropagation()}
             >
-                
-                <input
-                    type="range"
-                    min="0"
-                    max={duration || 100}
-                    value={currentTime}
-                    onChange={handleSeek}
-                    className="w-full h-1 bg-gray-600 rounded-lg appearance-none cursor-pointer mb-4 accent-primary-500 hover:h-2 transition-all"
-                />
+                {/* Progress Bar */}
+                <div className="relative w-full h-1 bg-white/20 rounded-full mb-4 group/progress cursor-pointer hover:h-1.5 transition-all">
+                    <div className="absolute top-0 left-0 h-full bg-gradient-to-r from-primary-500 to-purple-500 rounded-full" style={{ width: `${(currentTime / (duration || 1)) * 100}%` }}></div>
+                    <input
+                        type="range"
+                        min="0"
+                        max={duration || 100}
+                        value={currentTime}
+                        onChange={handleSeek}
+                        className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+                    />
+                </div>
 
                 <div className="flex items-center justify-between">
-                <div className="flex items-center gap-4">
-                    <button 
-                        onClick={(e) => { e.stopPropagation(); togglePlay(); }} 
-                        className="text-white hover:text-primary-400 transition-colors"
-                    >
-                        {isPlaying ? (
-                            <svg className="w-6 h-6" fill="currentColor" viewBox="0 0 24 24"><path d="M6 4h4v16H6V4zm8 0h4v16h-4V4z"/></svg>
-                        ) : (
-                            <Icons.Play className="w-6 h-6 fill-current" />
-                        )}
-                    </button>
-                    <span className="text-white text-sm font-mono">
-                        {formatTime(currentTime)} / {formatTime(duration)}
-                    </span>
-                    
-                    {/* Status Badge */}
-                    <span className={`text-[10px] px-1.5 py-0.5 rounded border ${blobUrl ? 'border-green-500/50 text-green-400 bg-green-500/10' : 'border-yellow-500/50 text-yellow-400 bg-yellow-500/10'}`}>
-                        {blobUrl ? '缓存模式' : '流媒体模式'}
-                    </span>
-                </div>
+                    <div className="flex items-center gap-4">
+                        <button 
+                            onClick={(e) => { e.stopPropagation(); togglePlay(); }} 
+                            className="text-white hover:text-primary-400 transition-colors transform hover:scale-110 active:scale-95"
+                        >
+                            {isPlaying ? (
+                                <svg className="w-8 h-8" fill="currentColor" viewBox="0 0 24 24"><path d="M6 4h4v16H6V4zm8 0h4v16h-4V4z"/></svg>
+                            ) : (
+                                <Icons.Play className="w-8 h-8 fill-current" />
+                            )}
+                        </button>
+                        <span className="text-white font-mono text-sm tracking-widest opacity-90">
+                            {formatTime(currentTime)} <span className="text-white/40">/</span> {formatTime(duration)}
+                        </span>
+                        
+                        <span className={`text-[10px] px-2 py-0.5 rounded-full border backdrop-blur-sm font-bold uppercase tracking-wider ${blobUrl ? 'border-green-500/30 text-green-300 bg-green-500/10' : 'border-yellow-500/30 text-yellow-300 bg-yellow-500/10'}`}>
+                            {blobUrl ? 'LOCAL CACHE' : 'STREAM'}
+                        </span>
+                    </div>
 
-                <div className="flex items-center gap-3">
                     <button
-                    onClick={captureFrame}
-                    className="flex items-center gap-2 px-3 py-1.5 bg-white/10 hover:bg-white/20 backdrop-blur-sm rounded-lg text-white text-sm transition-all border border-white/10 active:scale-95"
-                    title="截取当前帧"
+                        onClick={captureFrame}
+                        className="group/btn flex items-center gap-2 px-4 py-2 bg-white/10 hover:bg-white/20 backdrop-blur-md rounded-lg text-white text-sm font-medium transition-all border border-white/10 hover:border-white/30 active:scale-95"
                     >
-                    <Icons.Camera className="w-4 h-4" />
-                    <span className="hidden sm:inline">截帧</span>
+                        <Icons.Camera className="w-4 h-4 group-hover/btn:scale-110 transition-transform" />
+                        <span>截帧</span>
                     </button>
-                </div>
                 </div>
             </div>
           )}
           
-          {/* Centered Play Button (When Paused) */}
+          {/* Big Play Button */}
           {playerType === 'native' && !isPlaying && !showLoadingOverlay && (
-              <div 
-                className="absolute inset-0 flex items-center justify-center bg-black/10 cursor-pointer pointer-events-none"
-              >
-                  <div className="w-16 h-16 rounded-full bg-white/20 backdrop-blur-sm flex items-center justify-center shadow-lg">
-                      <Icons.Play className="w-8 h-8 text-white fill-current ml-1" />
+              <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+                  <div className="w-20 h-20 rounded-full bg-white/10 backdrop-blur-sm border border-white/20 flex items-center justify-center shadow-2xl animate-pulse">
+                      <Icons.Play className="w-10 h-10 text-white fill-current ml-1" />
                   </div>
               </div>
           )}
         </div>
 
-        {/* Captured Image Preview Area */}
+        {/* Capture Preview UI */}
         {capturedImage && (
-            <div id="capture-preview" className="animate-fade-in bg-white dark:bg-slate-900 rounded-xl p-4 shadow-sm ring-1 ring-gray-200 dark:ring-gray-800 border-l-4 border-primary-500">
-                <div className="flex items-center justify-between mb-3">
-                    <h3 className="font-semibold text-gray-800 dark:text-gray-200 flex items-center gap-2">
-                        <Icons.Camera className="w-5 h-5 text-primary-500" />
+            <div id="capture-preview" className="animate-fade-in-up glass-panel rounded-3xl p-6 shadow-2xl ring-2 ring-primary-500/20">
+                <div className="flex items-center justify-between mb-4 border-b border-white/10 pb-4">
+                    <h3 className="font-bold text-lg text-slate-800 dark:text-white flex items-center gap-2">
+                        <div className="p-1.5 bg-primary-500 rounded-lg shadow-lg shadow-primary-500/30">
+                           <Icons.Camera className="w-4 h-4 text-white" />
+                        </div>
                         截图预览
                     </h3>
                     <button 
                         onClick={() => setCapturedImage(null)}
-                        className="p-1 hover:bg-gray-100 dark:hover:bg-slate-800 rounded-full transition-colors text-gray-500"
-                        title="关闭预览"
+                        className="p-2 hover:bg-slate-100 dark:hover:bg-white/10 rounded-full transition-colors text-slate-500 dark:text-slate-400"
                     >
                         <Icons.Close className="w-5 h-5" />
                     </button>
                 </div>
                 
                 <div className="flex flex-col md:flex-row gap-6">
-                    <div className="flex-1 relative rounded-lg overflow-hidden bg-black/5 dark:bg-black/20 border border-gray-100 dark:border-gray-800 flex items-center justify-center min-h-[200px]">
+                    <div className="flex-1 relative rounded-2xl overflow-hidden bg-gradient-to-br from-slate-100 to-slate-200 dark:from-slate-800 dark:to-slate-900 border border-white/20 shadow-inner flex items-center justify-center min-h-[240px]">
+                        {/* Checkerboard pattern for transparency */}
+                        <div className="absolute inset-0 opacity-20" style={{backgroundImage: 'radial-gradient(#444 1px, transparent 1px)', backgroundSize: '10px 10px'}}></div>
+                        
                         <img 
                             src={capturedImage} 
                             alt="Captured Frame" 
-                            className="max-w-full max-h-[400px] object-contain shadow-lg"
+                            className="relative z-10 max-w-full max-h-[400px] object-contain shadow-2xl rounded-lg"
                         />
                     </div>
                     
-                    <div className="w-full md:w-48 flex flex-col justify-center gap-3">
-                        <p className="text-xs text-gray-500 dark:text-gray-400">
-                           当前帧已截取。你可以下载保存到本地。
-                        </p>
+                    <div className="w-full md:w-64 flex flex-col justify-center gap-4">
+                        <div className="p-4 rounded-xl bg-blue-500/5 border border-blue-500/10">
+                            <h4 className="text-sm font-bold text-blue-600 dark:text-blue-400 mb-1">高清原图</h4>
+                            <p className="text-xs text-slate-500 dark:text-slate-400">分辨率: {videoRef.current?.videoWidth} x {videoRef.current?.videoHeight}</p>
+                            <p className="text-xs text-slate-500 dark:text-slate-400">时间点: {formatTime(currentTime)}</p>
+                        </div>
+
                         <button
                             onClick={downloadCapturedImage}
-                            className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-primary-600 hover:bg-primary-500 text-white rounded-lg font-medium transition-colors shadow-lg shadow-primary-500/20"
+                            className="w-full flex items-center justify-center gap-2 px-6 py-4 bg-slate-900 dark:bg-white hover:bg-slate-800 dark:hover:bg-slate-200 text-white dark:text-slate-900 rounded-xl font-bold transition-all shadow-xl hover:shadow-2xl hover:-translate-y-0.5 active:translate-y-0"
                         >
-                            <Icons.Download className="w-4 h-4" />
-                            下载图片
+                            <Icons.Download className="w-5 h-5" />
+                            保存到本地
                         </button>
                     </div>
                 </div>
