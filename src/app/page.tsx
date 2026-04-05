@@ -105,8 +105,11 @@ export default function Home() {
       const rawDownloadUrl = data.sourceUrl || data.url || "";
       const parseMethod = platform === 'bilibili' ? (data.fallbackUsed || "unknown") : (data.source || "unknown");
       
-      // 直接使用源地址，前端通过 rel="noreferrer" 与 referrerPolicy="no-referrer" 规避 B站 防盗链
-      const downloadUrl = rawDownloadUrl;
+      // Bilibili 限制非常严格，如果直接访问会触发 403 导致 0 字节视频。
+      // 需要在后端中转一次，为请求加上 Bilibili 的 Referer。
+      const downloadUrl = (platform === 'bilibili' && ['official', 'injahow'].includes(parseMethod)) 
+        ? `/api/proxy?url=${encodeURIComponent(rawDownloadUrl)}`
+        : rawDownloadUrl;
 
       setResult({
         title: data.title || "未知标题",
@@ -270,7 +273,6 @@ export default function Home() {
                     poster={result.cover}
                     controls
                     crossOrigin="anonymous"
-                    {...({ referrerPolicy: "no-referrer" } as any)}
                     className="w-full h-full object-contain bg-black"
                   >
                     您的浏览器不支持视频播放。
@@ -308,7 +310,7 @@ export default function Home() {
                     <a
                       href={result.downloadUrl}
                       target="_blank"
-                      rel="noreferrer noopener"
+                      rel="noopener noreferrer"
                       className="w-full flex items-center justify-center gap-3 px-6 py-4 bg-slate-900 dark:bg-white text-white dark:text-slate-900 hover:bg-slate-800 dark:hover:bg-slate-200 rounded-2xl font-bold text-lg transition-all duration-300 shadow-lg hover:shadow-xl hover:-translate-y-1"
                     >
                       <Download className="w-5 h-5" />
