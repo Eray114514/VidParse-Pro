@@ -128,7 +128,7 @@ export default function Home() {
   if (!mounted) return null;
 
   return (
-    <div className="relative min-h-screen overflow-hidden font-sans text-slate-900 dark:text-white transition-colors duration-500">
+    <div className="relative min-h-screen overflow-hidden font-sans text-slate-900 dark:text-white">
       {/* Decorative Background Blobs */}
       <div className="fixed inset-0 overflow-hidden -z-10 pointer-events-none">
         <div className="absolute top-[-10%] left-[-10%] w-[500px] h-[500px] bg-purple-500/20 dark:bg-purple-600/20 rounded-full mix-blend-multiply dark:mix-blend-screen filter blur-[100px] opacity-70 animate-blob"></div>
