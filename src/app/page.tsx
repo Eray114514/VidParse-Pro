@@ -11,6 +11,7 @@ interface ParsedResult {
   downloadUrl: string;
   platform: "bilibili" | "youtube";
   duration?: string;
+  parseMethod?: string;
 }
 
 export default function Home() {
@@ -71,11 +72,21 @@ export default function Home() {
         throw new Error(data.error || "解析失败，请重试");
       }
 
+      const rawDownloadUrl = data.sourceUrl || data.url || "";
+      const parseMethod = platform === 'bilibili' ? (data.fallbackUsed || "unknown") : (data.source || "unknown");
+      
+      // Bilibili CDNs require Referer. If it's official or injahow, the URL points to Bilibili CDNs,
+      // so we proxy it through our Next.js API to add the Referer and bypass 403.
+      const downloadUrl = (platform === 'bilibili' && ['official', 'injahow'].includes(parseMethod)) 
+        ? `/api/proxy?url=${encodeURIComponent(rawDownloadUrl)}`
+        : rawDownloadUrl;
+
       setResult({
         title: data.title || "未知标题",
         cover: data.cover || "",
-        downloadUrl: data.sourceUrl || data.url || "",
+        downloadUrl,
         platform,
+        parseMethod,
       });
     } catch (err: any) {
       setError(err.message || "发生未知错误");
@@ -239,10 +250,17 @@ export default function Home() {
                     </div>
                   )}
                   <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent pointer-events-none"></div>
-                  <div className="absolute bottom-6 left-6 right-6">
-                    <span className="inline-block px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider bg-white/20 text-white backdrop-blur-md mb-3 border border-white/20">
-                      {result.platform}
-                    </span>
+                  <div className="absolute bottom-6 left-6 right-6 flex flex-col gap-3 items-start">
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <span className="inline-block px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider bg-white/20 text-white backdrop-blur-md border border-white/20">
+                        {result.platform}
+                      </span>
+                      {result.parseMethod && (
+                        <span className="inline-block px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider bg-primary/20 text-white backdrop-blur-md border border-primary/20">
+                          解析: {result.parseMethod}
+                        </span>
+                      )}
+                    </div>
                     <h2 className="text-2xl md:text-3xl font-bold text-white leading-tight line-clamp-2 drop-shadow-md">
                       {result.title}
                     </h2>

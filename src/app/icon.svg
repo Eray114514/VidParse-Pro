@@ -1,0 +1,21 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256">
+  <defs>
+    <linearGradient id="bgGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#3b82f6" />
+      <stop offset="50%" stop-color="#8b5cf6" />
+      <stop offset="100%" stop-color="#d946ef" />
+    </linearGradient>
+    <filter id="shadow" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="4" stdDeviation="6" flood-opacity="0.3" />
+    </filter>
+  </defs>
+  <!-- Background -->
+  <rect width="256" height="256" rx="60" fill="url(#bgGradient)" filter="url(#shadow)" />
+  <!-- Inner Glass Effect -->
+  <rect width="256" height="256" rx="60" fill="white" fill-opacity="0.1" />
+  <!-- Play Icon -->
+  <path d="M168.4 121.5L108.6 83.3c-4.8-3.1-11.1-1.9-14.2 2.9-1.1 1.7-1.6 3.6-1.6 5.6v76.4c0 5.6 4.5 10.1 10.1 10.1 2 0 3.9-0.5 5.6-1.6l59.8-38.2c4.8-3.1 6-9.4 2.9-14.2-0.8-1.3-1.8-2.2-2.8-2.8z" fill="white" filter="url(#shadow)" />
+  <!-- Accent Lines -->
+  <path d="M72 128 L80 128" stroke="white" stroke-width="8" stroke-linecap="round" opacity="0.5" />
+  <path d="M176 128 L184 128" stroke="white" stroke-width="8" stroke-linecap="round" opacity="0.5" />
+</svg>

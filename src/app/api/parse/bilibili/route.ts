@@ -80,8 +80,8 @@ export async function POST(req: Request) {
             headers['Cookie'] = `SESSDATA=${sessdata}`;
           }
 
-          // qn=80 corresponds to 1080P, fnval=0 for flv/mp4
-          const playApiUrl = `https://api.bilibili.com/x/player/playurl?cid=${cid}&qn=80&fnval=0&${idType}=${idValue}`;
+          // qn=80 corresponds to 1080P, fnval=1 for mp4 (fnval=0 is flv)
+          const playApiUrl = `https://api.bilibili.com/x/player/playurl?cid=${cid}&qn=80&fnval=1&${idType}=${idValue}`;
           const playRes = await fetch(playApiUrl, { headers });
           const playData = await playRes.json();
 
@@ -91,7 +91,7 @@ export async function POST(req: Request) {
               quality: playData.data.quality || 80,
               title,
               cover,
-              fallbackUsed: false
+              fallbackUsed: 'official'
             };
             return NextResponse.json(responseData);
           }
