@@ -1,4 +1,5 @@
 {
+  "framework": "nextjs",
   "functions": {
     "api/**/*.py": {
       "memory": 1024,
