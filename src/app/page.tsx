@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Loader2, Search, Download, AlertTriangle, Play, Moon, Sun, Check, Video } from "lucide-react";
+import { Loader2, Search, Download, AlertTriangle, Play, Moon, Sun, Check, Video, Camera } from "lucide-react";
 import { useTheme } from "next-themes";
 
 interface ParsedResult {
@@ -20,6 +20,7 @@ export default function Home() {
   const [error, setError] = useState<string | null>(null);
   const [result, setResult] = useState<ParsedResult | null>(null);
   const [copied, setCopied] = useState(false);
+  const [captured, setCaptured] = useState(false);
   const [mounted, setMounted] = useState(false);
   const { theme, setTheme } = useTheme();
 
@@ -39,6 +40,35 @@ export default function Home() {
 
   const handleDemoClick = () => {
     setUrl("https://www.bilibili.com/video/BV1GJ411x7h7");
+  };
+
+  const handleCapture = () => {
+    const video = document.getElementById('preview-video') as HTMLVideoElement;
+    if (!video) return;
+    
+    try {
+      const canvas = document.createElement('canvas');
+      canvas.width = video.videoWidth;
+      canvas.height = video.videoHeight;
+      const ctx = canvas.getContext('2d');
+      if (ctx) {
+        ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+        const dataUrl = canvas.toDataURL('image/png');
+        
+        const a = document.createElement('a');
+        a.href = dataUrl;
+        a.download = `frame_${new Date().getTime()}.png`;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        
+        setCaptured(true);
+        setTimeout(() => setCaptured(false), 2000);
+      }
+    } catch (err) {
+      console.error('Failed to capture frame', err);
+      alert('无法截取视频帧，可能是跨域策略限制。');
+    }
   };
 
   const handleSubmit = async (e?: React.FormEvent) => {
@@ -75,11 +105,8 @@ export default function Home() {
       const rawDownloadUrl = data.sourceUrl || data.url || "";
       const parseMethod = platform === 'bilibili' ? (data.fallbackUsed || "unknown") : (data.source || "unknown");
       
-      // Bilibili CDNs require Referer. If it's official or injahow, the URL points to Bilibili CDNs,
-      // so we proxy it through our Next.js API to add the Referer and bypass 403.
-      const downloadUrl = (platform === 'bilibili' && ['official', 'injahow'].includes(parseMethod)) 
-        ? `/api/proxy?url=${encodeURIComponent(rawDownloadUrl)}`
-        : rawDownloadUrl;
+      // 直接使用源地址，前端通过 rel="noreferrer" 与 referrerPolicy="no-referrer" 规避 B站 防盗链
+      const downloadUrl = rawDownloadUrl;
 
       setResult({
         title: data.title || "未知标题",
@@ -237,20 +264,19 @@ export default function Home() {
               {/* Left: Info & Preview */}
               <div className="lg:col-span-8 flex flex-col gap-6">
                 <div className="relative rounded-3xl overflow-hidden shadow-2xl ring-1 ring-slate-200 dark:ring-white/10 bg-black/5 backdrop-blur-sm group aspect-video">
-                  {result.cover ? (
-                    <img
-                      src={result.cover}
-                      alt={result.title}
-                      className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
-                      referrerPolicy="no-referrer"
-                    />
-                  ) : (
-                    <div className="w-full h-full flex items-center justify-center bg-slate-100 dark:bg-slate-800">
-                      <Video className="w-16 h-16 text-slate-300 dark:text-slate-600" />
-                    </div>
-                  )}
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent pointer-events-none"></div>
-                  <div className="absolute bottom-6 left-6 right-6 flex flex-col gap-3 items-start">
+                  <video
+                    id="preview-video"
+                    src={result.downloadUrl}
+                    poster={result.cover}
+                    controls
+                    crossOrigin="anonymous"
+                    {...({ referrerPolicy: "no-referrer" } as any)}
+                    className="w-full h-full object-contain bg-black"
+                  >
+                    您的浏览器不支持视频播放。
+                  </video>
+                  <div className="absolute top-0 left-0 right-0 h-24 bg-gradient-to-b from-black/80 to-transparent pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+                  <div className="absolute top-4 left-6 right-6 flex flex-col gap-3 items-start pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity duration-300">
                     <div className="flex items-center gap-2 flex-wrap">
                       <span className="inline-block px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider bg-white/20 text-white backdrop-blur-md border border-white/20">
                         {result.platform}
@@ -261,7 +287,7 @@ export default function Home() {
                         </span>
                       )}
                     </div>
-                    <h2 className="text-2xl md:text-3xl font-bold text-white leading-tight line-clamp-2 drop-shadow-md">
+                    <h2 className="text-xl font-bold text-white leading-tight line-clamp-1 drop-shadow-md">
                       {result.title}
                     </h2>
                   </div>
@@ -282,7 +308,7 @@ export default function Home() {
                     <a
                       href={result.downloadUrl}
                       target="_blank"
-                      rel="noopener noreferrer"
+                      rel="noreferrer noopener"
                       className="w-full flex items-center justify-center gap-3 px-6 py-4 bg-slate-900 dark:bg-white text-white dark:text-slate-900 hover:bg-slate-800 dark:hover:bg-slate-200 rounded-2xl font-bold text-lg transition-all duration-300 shadow-lg hover:shadow-xl hover:-translate-y-1"
                     >
                       <Download className="w-5 h-5" />
@@ -302,6 +328,23 @@ export default function Home() {
                         <>
                           <Search className="w-5 h-5 opacity-0 absolute" /> {/* spacer */}
                           复制链接
+                        </>
+                      )}
+                    </button>
+
+                    <button
+                      onClick={handleCapture}
+                      className="w-full flex items-center justify-center gap-3 px-6 py-4 glass-panel hover:bg-white/40 dark:hover:bg-white/10 rounded-2xl font-bold text-lg transition-all duration-300"
+                    >
+                      {captured ? (
+                        <>
+                          <Check className="w-5 h-5 text-emerald-500" />
+                          <span className="text-emerald-500">已截取</span>
+                        </>
+                      ) : (
+                        <>
+                          <Camera className="w-5 h-5" />
+                          视频截帧
                         </>
                       )}
                     </button>
