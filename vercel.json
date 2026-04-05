@@ -1,0 +1,14 @@
+{
+  "functions": {
+    "api/**/*.py": {
+      "memory": 1024,
+      "maxDuration": 60
+    }
+  },
+  "rewrites": [
+    {
+      "source": "/api/yt",
+      "destination": "/api/yt.py"
+    }
+  ]
+}
