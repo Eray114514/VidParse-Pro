@@ -6,8 +6,8 @@
 - [x] Task 5: Setup Next.js API Routes for YouTube parsing (Cobalt -> Python yt-dlp fallback).
 - [ ] Task 6: Build the modern frontend UI (Input form, Video Player, Download options, Error handling, Loading states).
 - [x] Task 7: Add `vercel.json` to configure deployment settings for both Node.js and Python functions.
-- [ ] Task 8: Commit and push all changes to the remote `main` branch.
-- [ ] Task 9: Provide user instructions on how to obtain `SESSDATA` from Bilibili.
+- [x] Task 8: Commit and push all changes to the remote `main` branch.
+- [x] Task 9: Provide user instructions on how to obtain `SESSDATA` from Bilibili.
 
 # Task Dependencies
 - [Task 2] depends on [Task 1]

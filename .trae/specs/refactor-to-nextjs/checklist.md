@@ -1,8 +1,8 @@
-- [ ] Next.js App Router project is successfully initialized replacing the old Vite project.
-- [ ] Modern UI (shadcn/ui, Framer Motion) is integrated and functioning.
-- [ ] Bilibili parsing API is implemented with max 1080P (qn=80) cap and fallback logic.
-- [ ] YouTube parsing API is implemented using Cobalt with a `yt-dlp` Python fallback.
-- [ ] `vercel.json` and `requirements.txt` are present and correctly configured.
-- [ ] The modern frontend interface allows users to input URLs, preview video, and download.
-- [ ] All changes are successfully pushed to the remote `main` branch.
-- [ ] Instructions for extracting Bilibili `SESSDATA` are prepared for the user.
+ - [x] Next.js App Router project is successfully initialized replacing the old Vite project.
+ - [x] Modern UI (shadcn/ui, Framer Motion) is integrated and functioning.
+ - [x] Bilibili parsing API is implemented with max 1080P (qn=80) cap and fallback logic.
+ - [x] YouTube parsing API is implemented using Cobalt with a `yt-dlp` Python fallback.
+ - [x] `vercel.json` and `requirements.txt` are present and correctly configured.
+ - [x] The modern frontend interface allows users to input URLs, preview video, and download.
+ - [x] All changes are successfully pushed to the remote `main` branch.
+ - [x] Instructions for extracting Bilibili `SESSDATA` are prepared for the user.
