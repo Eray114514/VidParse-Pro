@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 import "./globals.css";
 import { ThemeProvider } from "@/components/theme-provider";
+import AppLayout from "@/components/layout/AppLayout";
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -23,7 +24,7 @@ export default function RootLayout({
           defaultTheme="dark"
           enableSystem
         >
-          {children}
+          <AppLayout>{children}</AppLayout>
         </ThemeProvider>
       </body>
     </html>

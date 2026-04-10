@@ -1,0 +1,58 @@
+name: Release
+on:
+  push:
+    tags:
+      - 'v*'
+  workflow_dispatch:
+
+jobs:
+  release:
+    permissions:
+      contents: write
+    strategy:
+      fail-fast: false
+      matrix:
+        platform: [windows-latest]
+    runs-on: ${{ matrix.platform }}
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: Install Rust toolchain
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: x86_64-pc-windows-msvc
+
+      - name: Install dependencies
+        run: npm install
+
+      - name: Download yt-dlp and ffmpeg (Windows)
+        if: matrix.platform == 'windows-latest'
+        shell: pwsh
+        run: |
+          mkdir -p src-tauri/binaries
+          Invoke-WebRequest -Uri https://github.com/yt-dlp/yt-dlp/releases/latest/download/yt-dlp.exe -OutFile src-tauri/binaries/yt-dlp-x86_64-pc-windows-msvc.exe
+          Invoke-WebRequest -Uri https://github.com/BtbN/FFmpeg-Builds/releases/download/latest/ffmpeg-master-latest-win64-gpl.zip -OutFile ffmpeg.zip
+          Expand-Archive ffmpeg.zip -DestinationPath .
+          Move-Item ffmpeg-master-latest-win64-gpl/bin/ffmpeg.exe src-tauri/binaries/ffmpeg-x86_64-pc-windows-msvc.exe
+          Remove-Item ffmpeg.zip
+          Remove-Item -Recurse -Force ffmpeg-master-latest-win64-gpl
+
+      - name: Build Tauri app
+        uses: tauri-apps/tauri-action@v0
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          TAURI_BUILD: "true"
+        with:
+          tagName: ${{ github.ref_name }}
+          releaseName: "VidParse Pro ${{ github.ref_name }}"
+          releaseBody: "Release of VidParse Pro Desktop App."
+          releaseDraft: false
+          prerelease: false
