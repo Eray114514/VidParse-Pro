@@ -65,7 +65,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
            </div>
         </div>
       )}
-
+      
       {/* 网页端：极简顶导 (不含侧边栏和底导，保持纯粹) */}
       {!isDesktop && (
         <header className={`${containerClass} flex justify-between items-center py-8 z-40 relative`}>
@@ -87,17 +87,6 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
         </header>
       )}
       
-      {/* 桌面端主题切换悬浮按钮 (放置于右下角) */}
-      {isDesktop && (
-        <button
-          onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
-          className="fixed bottom-8 right-8 w-12 h-12 z-50 rounded-full bg-white/80 dark:bg-[#1a1a1e]/80 backdrop-blur-xl border border-slate-200/50 dark:border-white/10 flex items-center justify-center hover:bg-white dark:hover:bg-[#2a2a2e] transition-all text-slate-700 dark:text-slate-300 shadow-lg active:scale-95 pointer-events-auto group"
-          aria-label="Toggle theme"
-        >
-          {theme === "dark" ? <Sun className="w-5 h-5 group-hover:rotate-45 transition-transform duration-500" /> : <Moon className="w-5 h-5 group-hover:-rotate-12 transition-transform duration-500" />}
-        </button>
-      )}
-
       {/* 路由内容区 */}
       <main className={`flex-1 flex flex-col relative ${containerClass} ${isDesktop ? "pt-28" : ""} pb-12`}>
         <AnimatePresence mode="wait">
