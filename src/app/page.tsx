@@ -141,7 +141,7 @@ export default function Home() {
   if (!mounted) return null;
 
   return (
-    <div className="max-w-4xl mx-auto w-full flex flex-col gap-8 pb-12">
+    <div className="w-full flex flex-col gap-8">
       <div className="text-left space-y-4 mb-4">
         <h2 className="text-4xl md:text-5xl font-extrabold tracking-tight drop-shadow-sm">
           全能视频解析

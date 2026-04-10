@@ -13,6 +13,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
   const { theme, setTheme } = useTheme();
   const [mounted, setMounted] = useState(false);
   const [isDesktop, setIsDesktop] = useState(false);
+  const containerClass = "w-full max-w-5xl mx-auto px-6";
 
   useEffect(() => {
     setMounted(true);
@@ -67,7 +68,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
 
       {/* 网页端：极简顶导 (不含侧边栏和底导，保持纯粹) */}
       {!isDesktop && (
-        <header className="w-full flex justify-between items-center px-6 py-8 max-w-5xl mx-auto z-40 relative">
+        <header className={`${containerClass} flex justify-between items-center py-8 z-40 relative`}>
           <Link href="/" className="flex items-center gap-3 cursor-pointer group">
             <div className="w-10 h-10 rounded-2xl bg-gradient-to-br from-blue-500/20 to-purple-500/20 text-blue-600 dark:text-blue-400 flex items-center justify-center border border-blue-500/10 shadow-inner group-hover:scale-105 transition-transform duration-300">
               <MonitorPlay className="w-5 h-5" />
@@ -98,7 +99,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
       )}
 
       {/* 路由内容区 */}
-      <main className={`flex-1 flex flex-col relative w-full max-w-4xl mx-auto ${isDesktop ? 'pt-28 px-6' : 'px-6'} pb-12`}>
+      <main className={`flex-1 flex flex-col relative ${containerClass} ${isDesktop ? "pt-28" : ""} pb-12`}>
         <AnimatePresence mode="wait">
           <motion.div
             key={pathname}
