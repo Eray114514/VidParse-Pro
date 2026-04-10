@@ -2,7 +2,7 @@
   "$schema": "../node_modules/@tauri-apps/cli/config.schema.json",
   "productName": "vidparse-pro",
   "version": "0.1.0",
-  "identifier": "com.vidparsepro.app",
+  "identifier": "com.vidparsepro.desktop",
   "build": {
     "frontendDist": "../out",
     "devUrl": "http://localhost:3000",
