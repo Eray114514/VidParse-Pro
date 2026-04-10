@@ -7,6 +7,7 @@ const nextConfig: NextConfig = {
   images: {
     unoptimized: isTauriBuild,
   },
+  pageExtensions: isTauriBuild ? ['tsx', 'jsx'] : ['tsx', 'ts', 'jsx', 'js'],
 };
 
 export default nextConfig;
