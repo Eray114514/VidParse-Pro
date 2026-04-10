@@ -142,12 +142,6 @@ export default function Home() {
 
   return (
     <div className="max-w-4xl mx-auto w-full flex flex-col gap-8 pb-12">
-      {/* Decorative Background Blobs inside page */}
-      <div className="fixed inset-0 overflow-hidden pointer-events-none -z-10">
-        <div className="absolute top-[-10%] right-[-10%] w-[500px] h-[500px] bg-purple-500/10 dark:bg-purple-600/10 rounded-full mix-blend-multiply dark:mix-blend-screen filter blur-[100px] opacity-70 animate-blob"></div>
-        <div className="absolute bottom-[-10%] left-[-10%] w-[500px] h-[500px] bg-emerald-500/10 dark:bg-emerald-600/10 rounded-full mix-blend-multiply dark:mix-blend-screen filter blur-[100px] opacity-50 animate-blob"></div>
-      </div>
-
       <div className="text-left space-y-4 mb-4">
         <h2 className="text-4xl md:text-5xl font-extrabold tracking-tight drop-shadow-sm">
           全能视频解析
@@ -158,8 +152,8 @@ export default function Home() {
       </div>
 
       <div className="relative w-full group z-20">
-        <div className="relative flex items-center glass-panel rounded-3xl p-2 shadow-2xl transition-all duration-500 hover:ring-2 hover:ring-primary/30 focus-within:ring-2 focus-within:ring-primary/50 focus-within:shadow-primary/10">
-          <div className="pl-5 pr-3 text-slate-400">
+        <div className="relative flex items-center bg-white/70 dark:bg-[#1a1a1e]/70 backdrop-blur-xl border border-slate-200/50 dark:border-white/10 rounded-[2rem] p-2 shadow-xl hover:shadow-2xl transition-all duration-500 hover:ring-1 hover:ring-blue-500/30 focus-within:ring-2 focus-within:ring-blue-500/50 focus-within:shadow-blue-500/10">
+          <div className="pl-6 pr-3 text-slate-400">
             <Search className="w-6 h-6" />
           </div>
           <input
@@ -167,19 +161,19 @@ export default function Home() {
             value={url}
             onChange={(e) => setUrl(e.target.value)}
             placeholder="粘贴视频链接 (Bilibili, YouTube...)"
-            className="flex-1 bg-transparent border-none outline-none px-2 py-4 text-lg md:text-xl placeholder-slate-400/80 font-medium w-full"
+            className="flex-1 bg-transparent border-none outline-none px-2 py-5 text-lg md:text-xl placeholder-slate-400/60 font-medium w-full text-slate-800 dark:text-slate-100"
             onKeyDown={(e) => e.key === 'Enter' && handleSubmit()}
             disabled={loading}
           />
           <button
             onClick={() => handleSubmit()}
             disabled={loading || !url.trim()}
-            className="px-8 py-4 bg-slate-900 dark:bg-white text-white dark:text-slate-900 rounded-2xl font-bold text-lg transition-all duration-300 shadow-xl hover:shadow-2xl hover:-translate-y-1 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none flex items-center gap-2"
+            className="px-8 py-5 bg-slate-900 dark:bg-white text-white dark:text-slate-900 rounded-3xl font-bold text-lg transition-all duration-300 shadow-md hover:shadow-xl hover:-translate-y-1 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none flex items-center gap-2"
           >
             {loading ? (
               <Loader2 className="animate-spin w-6 h-6" />
             ) : (
-              <span>解析</span>
+              <span>开始解析</span>
             )}
           </button>
         </div>
