@@ -33,6 +33,13 @@ jobs:
       - name: Install dependencies
         run: npm install
 
+      - name: Inject Version
+        shell: bash
+        run: |
+          VERSION=${GITHUB_REF_NAME#v}
+          npm version $VERSION --no-git-tag-version
+          jq '.version = "'$VERSION'"' src-tauri/tauri.conf.json > temp.json && mv temp.json src-tauri/tauri.conf.json
+
       - name: Download yt-dlp and ffmpeg (Windows)
         if: matrix.platform == 'windows-latest'
         shell: pwsh

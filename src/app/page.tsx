@@ -89,7 +89,11 @@ export default function Home() {
       let rawBvid = bvidMatch ? bvidMatch[0] : undefined;
 
       const platform = isBilibili ? "bilibili" : "youtube";
-      const endpoint = isTauri() ? "https://vidparse-pro.vercel.app/api/parse/" + platform : `/api/parse/${platform}`;
+      const customEndpoint = isTauri() ? (localStorage.getItem("apiEndpoint") || "https://vidparse-pro.vercel.app") : "";
+      
+      // Clean up trailing slash from customEndpoint if present
+      const cleanEndpoint = customEndpoint.replace(/\/$/, "");
+      const endpoint = isTauri() ? `${cleanEndpoint}/api/parse/${platform}` : `/api/parse/${platform}`;
 
       const cookieString = isTauri() ? (localStorage.getItem("cookieString") || "") : "";
 
@@ -97,6 +101,11 @@ export default function Home() {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ url, cookie: cookieString }),
+      }).catch(err => {
+        if (err.message.includes('Failed to fetch')) {
+          throw new Error("网络连接失败。请检查您的网络，或在设置页配置可用的云端解析节点。");
+        }
+        throw err;
       });
 
       const data = await res.json();

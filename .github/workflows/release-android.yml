@@ -35,6 +35,13 @@ jobs:
       - name: Install dependencies
         run: npm install
 
+      - name: Inject Version
+        shell: bash
+        run: |
+          VERSION=${GITHUB_REF_NAME#v}
+          npm version $VERSION --no-git-tag-version
+          jq '.version = "'$VERSION'"' src-tauri/tauri.conf.json > temp.json && mv temp.json src-tauri/tauri.conf.json
+
       - name: Initialize Android Project
         run: |
           jq 'del(.bundle.externalBin)' src-tauri/tauri.conf.json > src-tauri/tauri.conf.tmp.json && mv src-tauri/tauri.conf.tmp.json src-tauri/tauri.conf.json
@@ -47,11 +54,13 @@ jobs:
         run: npx tauri android build --apk
 
       - name: Rename APK
-        run: mv src-tauri/gen/android/app/build/outputs/apk/universal/release/app-universal-release-unsigned.apk src-tauri/gen/android/app/build/outputs/apk/universal/release/VidParse-Pro-Android-v1.1.0.apk
+        run: |
+          VERSION=${GITHUB_REF_NAME#v}
+          mv src-tauri/gen/android/app/build/outputs/apk/universal/release/app-universal-release-unsigned.apk src-tauri/gen/android/app/build/outputs/apk/universal/release/VidParse-Pro-Android-v${VERSION}.apk
 
       - name: Upload Release
         uses: softprops/action-gh-release@v1
         with:
-          files: src-tauri/gen/android/app/build/outputs/apk/universal/release/VidParse-Pro-Android-v1.1.0.apk
+          files: src-tauri/gen/android/app/build/outputs/apk/universal/release/VidParse-Pro-Android-v*.apk
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

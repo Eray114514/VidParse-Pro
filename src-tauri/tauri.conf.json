@@ -39,6 +39,15 @@
     "externalBin": [
       "binaries/yt-dlp",
       "binaries/ffmpeg"
-    ]
+    ],
+    "windows": {
+      "wix": {
+        "language": "zh-CN"
+      },
+      "nsis": {
+        "installMode": "currentUser",
+        "displayLanguageSelector": false
+      }
+    }
   }
 }

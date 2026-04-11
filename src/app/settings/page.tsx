@@ -2,13 +2,14 @@
 
 import { useState, useEffect } from "react";
 import { isTauri } from "@/lib/env";
-import { Folder, Key, ShieldCheck, Globe, MonitorUp } from "lucide-react";
+import { Folder, Key, ShieldCheck, Globe, MonitorUp, Server } from "lucide-react";
 
 export default function SettingsPage() {
   const [downloadPath, setDownloadPath] = useState("");
   const [cookieString, setCookieString] = useState("");
   const [cookieBrowser, setCookieBrowser] = useState("none");
   const [maxQuality, setMaxQuality] = useState("80"); // 80: 1080P, 116/120: 4K
+  const [apiEndpoint, setApiEndpoint] = useState("");
   const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
@@ -17,6 +18,7 @@ export default function SettingsPage() {
     setCookieString(localStorage.getItem("cookieString") || localStorage.getItem("sessdata") || "");
     setCookieBrowser(localStorage.getItem("cookieBrowser") || "none");
     setMaxQuality(localStorage.getItem("maxQuality") || "80");
+    setApiEndpoint(localStorage.getItem("apiEndpoint") || "https://vidparse-pro.vercel.app");
   }, []);
 
   const handleSelectDir = async () => {
@@ -55,6 +57,17 @@ export default function SettingsPage() {
     const val = e.target.value;
     setMaxQuality(val);
     localStorage.setItem("maxQuality", val);
+  };
+
+  const handleApiEndpointChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const val = e.target.value;
+    setApiEndpoint(val);
+    localStorage.setItem("apiEndpoint", val);
+  };
+
+  const resetApiEndpoint = () => {
+    setApiEndpoint("https://vidparse-pro.vercel.app");
+    localStorage.setItem("apiEndpoint", "https://vidparse-pro.vercel.app");
   };
 
   if (!mounted) return null;
@@ -167,6 +180,39 @@ export default function SettingsPage() {
             </div>
           </div>
         </div>
+        {/* API Endpoint Card */}
+        <div className="bg-white/70 dark:bg-[#1a1a1e]/70 backdrop-blur-xl p-8 rounded-3xl shadow-sm border border-slate-200/50 dark:border-white/5 relative overflow-hidden group transition-colors">
+          <div className="absolute top-0 right-0 p-8 opacity-5 group-hover:opacity-10 transition-opacity pointer-events-none">
+            <Server className="w-32 h-32" />
+          </div>
+          <div className="relative z-10 space-y-4">
+            <div className="flex items-center gap-3">
+              <div className="p-2.5 rounded-2xl bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 shadow-inner">
+                <Server className="w-6 h-6" />
+              </div>
+              <h3 className="text-xl font-bold">云端解析节点 (API Endpoint)</h3>
+            </div>
+            <p className="text-sm text-slate-500 dark:text-slate-400 font-medium">
+              默认使用 Vercel 节点。如果您所在的网络环境无法连接 (Failed to fetch)，您可以绑定自己的域名并填入下方。
+            </p>
+            <div className="flex gap-3 pt-2">
+              <input
+                type="url"
+                value={apiEndpoint}
+                onChange={handleApiEndpointChange}
+                placeholder="https://vidparse-pro.vercel.app"
+                className="flex-1 bg-white/50 dark:bg-black/20 backdrop-blur-sm border border-slate-200 dark:border-white/10 rounded-2xl px-5 py-4 outline-none focus:ring-2 focus:ring-emerald-500/50 text-slate-700 dark:text-slate-300 font-medium transition-all"
+              />
+              <button
+                onClick={resetApiEndpoint}
+                className="px-6 py-4 bg-slate-100 dark:bg-white/5 text-slate-700 dark:text-slate-300 rounded-2xl font-bold transition-all duration-300 hover:bg-slate-200 dark:hover:bg-white/10 whitespace-nowrap"
+              >
+                恢复默认
+              </button>
+            </div>
+          </div>
+        </div>
+
         {/* Quality Card */}
         <div className="bg-white/70 dark:bg-[#1a1a1e]/70 backdrop-blur-xl p-8 rounded-3xl shadow-sm border border-slate-200/50 dark:border-white/5 relative overflow-hidden group transition-colors">
           <div className="absolute top-0 right-0 p-8 opacity-5 group-hover:opacity-10 transition-opacity pointer-events-none">
