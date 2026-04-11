@@ -58,7 +58,7 @@ export async function POST(req: Request) {
     if (idType && idValue) {
       try {
         // Prepare headers with optional cookie
-        const sessdata = process.env.SESSDATA;
+        const envCookie = process.env.BILIBILI_COOKIE || process.env.SESSDATA;
         const apiHeaders: Record<string, string> = {
           'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36',
           'Referer': 'https://www.bilibili.com'
@@ -66,8 +66,8 @@ export async function POST(req: Request) {
         
         if (userCookie) {
           apiHeaders['Cookie'] = userCookie.includes('=') ? userCookie : `SESSDATA=${userCookie}`;
-        } else if (sessdata) {
-          apiHeaders['Cookie'] = `SESSDATA=${sessdata}`;
+        } else if (envCookie) {
+          apiHeaders['Cookie'] = envCookie.includes('=') ? envCookie : `SESSDATA=${envCookie}`;
         }
 
         // Step 1: Get Video Info (CID, Title, Cover)

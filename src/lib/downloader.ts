@@ -1,8 +1,12 @@
-import { isTauri } from "./env";
+import { isTauri, isTauriMobile } from "./env";
 
 export async function invokeTauriDownload(targetUrl: string, platform: "bilibili" | "youtube") {
   if (!isTauri()) {
     throw new Error("请在客户端中使用本地下载。");
+  }
+
+  if (isTauriMobile()) {
+    throw new Error("安卓端暂不支持调用本地 yt-dlp 引擎，请直接点击“直接下载”通过云端解析保存。");
   }
 
   const { Command } = await import("@tauri-apps/plugin-shell");
@@ -16,10 +20,19 @@ export async function invokeTauriDownload(targetUrl: string, platform: "bilibili
 
   const cookieBrowser = localStorage.getItem("cookieBrowser") || "none";
   const cookieString = localStorage.getItem("cookieString") || localStorage.getItem("sessdata");
+  const maxQuality = localStorage.getItem("maxQuality") || "80";
   
   let finalUrl = targetUrl;
   if (platform === "bilibili" && targetUrl.startsWith("BV")) {
     finalUrl = `https://www.bilibili.com/video/${targetUrl}`;
+  }
+
+  let formatStr = 'bestvideo+bestaudio/best';
+  if (platform === "bilibili") {
+    // 80 corresponds to 1080p, 116 corresponds to 1080p60/4k
+    if (maxQuality === "80") {
+      formatStr = 'bestvideo[height<=1080]+bestaudio/best';
+    }
   }
 
   try {
@@ -27,7 +40,7 @@ export async function invokeTauriDownload(targetUrl: string, platform: "bilibili
     
     const args = [
       finalUrl,
-      '-f', 'bestvideo+bestaudio/best',
+      '-f', formatStr,
       '--ffmpeg-location', ffmpegPath,
       '--merge-output-format', 'mp4',
       '-o', `${targetDir}/%(title)s.%(ext)s`,

@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Loader2, Search, Download, AlertTriangle, Play, Check, Camera } from "lucide-react";
-import { isTauri } from "@/lib/env";
+import { isTauri, isTauriMobile } from "@/lib/env";
 import { invokeTauriDownload } from "@/lib/downloader";
 
 interface ParsedResult {
@@ -91,7 +91,7 @@ export default function Home() {
       const platform = isBilibili ? "bilibili" : "youtube";
       const endpoint = isTauri() ? "https://vidparse-pro.vercel.app/api/parse/" + platform : `/api/parse/${platform}`;
 
-      const cookieString = localStorage.getItem("cookieString") || localStorage.getItem("sessdata") || "";
+      const cookieString = isTauri() ? (localStorage.getItem("cookieString") || "") : "";
 
       const res = await fetch(endpoint, {
         method: "POST",
@@ -270,7 +270,7 @@ export default function Home() {
                 </h3>
 
                 <div className="flex-1 space-y-4">
-                  {isTauri() ? (
+                  {isTauri() && !isTauriMobile() ? (
                     <button
                       onClick={handleLocalDownload}
                       className="w-full flex items-center justify-center gap-3 px-6 py-4 bg-slate-900 dark:bg-white text-white dark:text-slate-900 hover:bg-slate-800 dark:hover:bg-slate-200 rounded-2xl font-bold text-lg transition-all duration-300 shadow-lg hover:shadow-xl hover:-translate-y-1"

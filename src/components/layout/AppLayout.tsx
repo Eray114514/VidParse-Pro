@@ -12,12 +12,12 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const { theme, setTheme } = useTheme();
   const [mounted, setMounted] = useState(false);
-  const [isDesktop, setIsDesktop] = useState(false);
+  const [isApp, setIsApp] = useState(false);
   const containerClass = "w-full max-w-5xl mx-auto px-6";
 
   useEffect(() => {
     setMounted(true);
-    setIsDesktop(isTauri());
+    setIsApp(isTauri());
   }, []);
 
   const navItems = [
@@ -37,37 +37,57 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
         <div className="absolute bottom-[-15%] left-[-10%] w-[600px] h-[600px] bg-purple-500/10 dark:bg-purple-600/10 rounded-full mix-blend-multiply dark:mix-blend-screen filter blur-[120px] opacity-50 animate-blob" style={{ animationDelay: '3s' }}></div>
       </div>
 
-      {/* 桌面端：可拖拽区域 + 居中悬浮胶囊导航 */}
-      {isDesktop && (
-        <div
-          data-tauri-drag-region
-          className="fixed top-0 left-0 right-0 h-16 z-50 flex items-center justify-center select-none"
-        >
-           <div className="flex items-center gap-1 p-1.5 bg-white/70 dark:bg-[#1a1a1e]/70 backdrop-blur-xl border border-slate-200/50 dark:border-white/10 rounded-full shadow-sm pointer-events-auto">
-             {navItems.map((item) => {
-                const isActive = pathname === item.href;
-                return (
-                  <Link key={item.href} href={item.href} className="relative px-5 py-2 rounded-full text-sm font-semibold transition-colors z-10 flex items-center gap-2 group">
-                    {isActive && (
-                      <motion.div
-                        layoutId="desktop-nav-indicator"
-                        className="absolute inset-0 bg-white dark:bg-[#2a2a2e] rounded-full shadow-sm border border-slate-200/50 dark:border-white/5"
-                        transition={{ type: "spring", bounce: 0.2, duration: 0.6 }}
-                      />
-                    )}
-                    <item.icon className={`w-4 h-4 relative z-10 transition-colors duration-300 ${isActive ? 'text-blue-600 dark:text-blue-400' : 'text-slate-400 dark:text-slate-500 group-hover:text-slate-900 dark:group-hover:text-white'}`} />
-                    <span className={`relative z-10 transition-colors duration-300 ${isActive ? 'text-slate-900 dark:text-white' : 'text-slate-500 dark:text-slate-400 group-hover:text-slate-900 dark:group-hover:text-white'}`}>
-                      {item.name}
-                    </span>
-                  </Link>
-                );
-             })}
-           </div>
-        </div>
+      {/* App端 (Tauri)：响应式导航栏 */}
+      {isApp && (
+        <>
+          {/* 桌面端：顶部悬浮胶囊导航 */}
+          <div
+            data-tauri-drag-region
+            className="fixed top-0 left-0 right-0 h-16 z-50 hidden md:flex items-center justify-center select-none"
+          >
+             <div className="flex items-center gap-1 p-1.5 bg-white/70 dark:bg-[#1a1a1e]/70 backdrop-blur-xl border border-slate-200/50 dark:border-white/10 rounded-full shadow-sm pointer-events-auto">
+               {navItems.map((item) => {
+                  const isActive = pathname === item.href;
+                  return (
+                    <Link key={item.href} href={item.href} className="relative px-5 py-2 rounded-full text-sm font-semibold transition-colors z-10 flex items-center gap-2 group">
+                      {isActive && (
+                        <motion.div
+                          layoutId="desktop-nav-indicator"
+                          className="absolute inset-0 bg-white dark:bg-[#2a2a2e] rounded-full shadow-sm border border-slate-200/50 dark:border-white/5"
+                          transition={{ type: "spring", bounce: 0.2, duration: 0.6 }}
+                        />
+                      )}
+                      <item.icon className={`w-4 h-4 relative z-10 transition-colors duration-300 ${isActive ? 'text-blue-600 dark:text-blue-400' : 'text-slate-400 dark:text-slate-500 group-hover:text-slate-900 dark:group-hover:text-white'}`} />
+                      <span className={`relative z-10 transition-colors duration-300 ${isActive ? 'text-slate-900 dark:text-white' : 'text-slate-500 dark:text-slate-400 group-hover:text-slate-900 dark:group-hover:text-white'}`}>
+                        {item.name}
+                      </span>
+                    </Link>
+                  );
+               })}
+             </div>
+          </div>
+
+          {/* 移动端 (安卓APK)：底部导航栏 */}
+          <div className="fixed bottom-0 left-0 right-0 h-16 z-50 md:hidden bg-white/80 dark:bg-[#1a1a1e]/80 backdrop-blur-xl border-t border-slate-200/50 dark:border-white/10 flex items-center justify-around px-2 shadow-[0_-4px_20px_rgba(0,0,0,0.05)] pb-safe">
+            {navItems.map((item) => {
+              const isActive = pathname === item.href;
+              return (
+                <Link key={item.href} href={item.href} className="flex flex-col items-center justify-center w-full h-full gap-1 py-1">
+                  <div className={`p-1.5 rounded-xl transition-colors duration-300 ${isActive ? 'bg-blue-500/10 text-blue-600 dark:text-blue-400' : 'text-slate-400 dark:text-slate-500'}`}>
+                    <item.icon className="w-5 h-5" />
+                  </div>
+                  <span className={`text-[10px] font-medium transition-colors duration-300 ${isActive ? 'text-blue-600 dark:text-blue-400' : 'text-slate-400 dark:text-slate-500'}`}>
+                    {item.name}
+                  </span>
+                </Link>
+              );
+            })}
+          </div>
+        </>
       )}
 
       {/* 网页端：极简顶导 (不含侧边栏和底导，保持纯粹) */}
-      {!isDesktop && (
+      {!isApp && (
         <header className={`${containerClass} flex justify-between items-center py-8 z-40 relative`}>
           <Link href="/" className="flex items-center gap-3 cursor-pointer group">
             <div className="w-10 h-10 rounded-2xl bg-gradient-to-br from-blue-500/20 to-purple-500/20 text-blue-600 dark:text-blue-400 flex items-center justify-center border border-blue-500/10 shadow-inner group-hover:scale-105 transition-transform duration-300">
@@ -88,10 +108,10 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
       )}
       
       {/* 桌面端主题切换悬浮按钮 (放置于右下角) */}
-      {isDesktop && (
+      {isApp && (
         <button
           onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
-          className="fixed bottom-8 right-8 w-12 h-12 z-50 rounded-full bg-white/80 dark:bg-[#1a1a1e]/80 backdrop-blur-xl border border-slate-200/50 dark:border-white/10 flex items-center justify-center hover:bg-white dark:hover:bg-[#2a2a2e] transition-all text-slate-700 dark:text-slate-300 shadow-lg active:scale-95 pointer-events-auto group"
+          className="fixed bottom-24 md:bottom-8 right-8 w-12 h-12 z-50 rounded-full bg-white/80 dark:bg-[#1a1a1e]/80 backdrop-blur-xl border border-slate-200/50 dark:border-white/10 flex items-center justify-center hover:bg-white dark:hover:bg-[#2a2a2e] transition-all text-slate-700 dark:text-slate-300 shadow-lg active:scale-95 pointer-events-auto group"
           aria-label="Toggle theme"
         >
           {theme === "dark" ? <Sun className="w-5 h-5 group-hover:rotate-45 transition-transform duration-500" /> : <Moon className="w-5 h-5 group-hover:-rotate-12 transition-transform duration-500" />}
@@ -99,7 +119,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
       )}
 
       {/* 路由内容区 */}
-      <main className={`flex-1 flex flex-col relative ${containerClass} ${isDesktop ? "pt-28" : ""} pb-12`}>
+      <main className={`flex-1 flex flex-col relative ${containerClass} ${isApp ? "pt-8 md:pt-28 pb-20 md:pb-12" : "pb-12"}`}>
         <AnimatePresence mode="wait">
           <motion.div
             key={pathname}

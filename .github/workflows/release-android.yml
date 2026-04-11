@@ -1,0 +1,54 @@
+name: Release Android
+on:
+  push:
+    tags:
+      - 'v*'
+  workflow_dispatch:
+
+jobs:
+  release-android:
+    permissions:
+      contents: write
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: Install Rust toolchain
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: aarch64-linux-android,armv7-linux-androideabi,i686-linux-android,x86_64-linux-android
+
+      - name: Setup Java
+        uses: actions/setup-java@v3
+        with:
+          distribution: 'zulu'
+          java-version: '17'
+
+      - name: Install dependencies
+        run: npm install
+
+      - name: Initialize Android Project
+        run: |
+          jq 'del(.bundle.externalBin)' src-tauri/tauri.conf.json > src-tauri/tauri.conf.tmp.json && mv src-tauri/tauri.conf.tmp.json src-tauri/tauri.conf.json
+          npx tauri android init
+
+      - name: Build Tauri Android App
+        env:
+          TAURI_BUILD: "true"
+          NDK_HOME: ${{ env.ANDROID_NDK_LATEST_HOME }}
+        run: npx tauri android build --apk
+
+      - name: Upload Release
+        uses: softprops/action-gh-release@v1
+        with:
+          files: src-tauri/gen/android/app/build/outputs/apk/universal/release/app-universal-release.apk
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
