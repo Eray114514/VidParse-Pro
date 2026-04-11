@@ -2,17 +2,19 @@
 
 import { useState, useEffect } from "react";
 import { isTauri } from "@/lib/env";
-import { Folder, Key, ShieldCheck } from "lucide-react";
+import { Folder, Key, ShieldCheck, Globe } from "lucide-react";
 
 export default function SettingsPage() {
   const [downloadPath, setDownloadPath] = useState("");
-  const [sessdata, setSessdata] = useState("");
+  const [cookieString, setCookieString] = useState("");
+  const [cookieBrowser, setCookieBrowser] = useState("none");
   const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
     setMounted(true);
     setDownloadPath(localStorage.getItem("downloadPath") || "");
-    setSessdata(localStorage.getItem("sessdata") || "");
+    setCookieString(localStorage.getItem("cookieString") || localStorage.getItem("sessdata") || "");
+    setCookieBrowser(localStorage.getItem("cookieBrowser") || "none");
   }, []);
 
   const handleSelectDir = async () => {
@@ -35,10 +37,16 @@ export default function SettingsPage() {
     }
   };
 
-  const handleSessdataChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleCookieStringChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const val = e.target.value;
-    setSessdata(val);
-    localStorage.setItem("sessdata", val);
+    setCookieString(val);
+    localStorage.setItem("cookieString", val);
+  };
+
+  const handleCookieBrowserChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    const val = e.target.value;
+    setCookieBrowser(val);
+    localStorage.setItem("cookieBrowser", val);
   };
 
   if (!mounted) return null;
@@ -89,28 +97,55 @@ export default function SettingsPage() {
           </div>
         </div>
 
-        {/* SESSDATA Card */}
+        {/* Cookie / SESSDATA Card */}
         <div className="bg-white/70 dark:bg-[#1a1a1e]/70 backdrop-blur-xl p-8 rounded-3xl shadow-sm border border-slate-200/50 dark:border-white/5 relative overflow-hidden group transition-colors">
           <div className="absolute top-0 right-0 p-8 opacity-5 group-hover:opacity-10 transition-opacity pointer-events-none">
             <ShieldCheck className="w-32 h-32" />
           </div>
-          <div className="relative z-10 space-y-4">
+          <div className="relative z-10 space-y-6">
             <div className="flex items-center gap-3">
               <div className="p-2.5 rounded-2xl bg-purple-500/10 text-purple-600 dark:text-purple-400 shadow-inner">
                 <Key className="w-6 h-6" />
               </div>
-              <h3 className="text-xl font-bold">Bilibili 身份令牌 (SESSDATA)</h3>
+              <h3 className="text-xl font-bold">Bilibili 身份鉴权 (Cookie)</h3>
             </div>
             <p className="text-sm text-slate-500 dark:text-slate-400 font-medium max-w-2xl leading-relaxed">
-              配置您的 SESSDATA 可在客户端突破画质限制，下载 1080P 高码率甚至 4K 视频（需要您本身是大会员）。网页端将继续使用服务器端环境变量。
+              配置 Cookie 可突破画质限制，下载 1080P/4K 高码率视频（需本身是大会员）。推荐客户端用户直接使用“提取浏览器”功能。网页端用户可手动填写 Cookie 字符串。
             </p>
-            <div className="pt-2">
+
+            {isTauri() && (
+              <div className="space-y-3">
+                <label className="text-sm font-bold text-slate-700 dark:text-slate-300 flex items-center gap-2">
+                  <Globe className="w-4 h-4" /> 自动提取浏览器 Cookie
+                </label>
+                <select
+                  value={cookieBrowser}
+                  onChange={handleCookieBrowserChange}
+                  className="w-full bg-white/50 dark:bg-black/20 backdrop-blur-sm border border-slate-200 dark:border-white/10 rounded-2xl px-5 py-4 outline-none focus:ring-2 focus:ring-purple-500/50 text-slate-700 dark:text-slate-300 font-medium transition-all appearance-none cursor-pointer"
+                >
+                  <option value="none">不自动提取 (使用下方手动输入)</option>
+                  <option value="chrome">Google Chrome</option>
+                  <option value="edge">Microsoft Edge</option>
+                  <option value="firefox">Mozilla Firefox</option>
+                  <option value="safari">Safari</option>
+                  <option value="opera">Opera</option>
+                  <option value="brave">Brave</option>
+                </select>
+                <p className="text-xs text-slate-500">选择您平时登录 B站 的浏览器。程序将在下载时自动读取其 Cookie，无需手动配置。</p>
+              </div>
+            )}
+
+            <div className="space-y-3">
+              <label className="text-sm font-bold text-slate-700 dark:text-slate-300">
+                手动输入 Cookie 或 SESSDATA {isTauri() && cookieBrowser !== 'none' && <span className="text-slate-400 font-normal">(当前已被浏览器提取覆盖)</span>}
+              </label>
               <input
                 type="password"
-                value={sessdata}
-                onChange={handleSessdataChange}
-                placeholder="粘贴您的 SESSDATA"
-                className="w-full bg-white/50 dark:bg-black/20 backdrop-blur-sm border border-slate-200 dark:border-white/10 rounded-2xl px-5 py-4 outline-none focus:ring-2 focus:ring-purple-500/50 text-slate-700 dark:text-slate-300 font-medium transition-all"
+                value={cookieString}
+                onChange={handleCookieStringChange}
+                disabled={isTauri() && cookieBrowser !== 'none'}
+                placeholder="在此粘贴您的完整 Cookie 或 SESSDATA"
+                className="w-full bg-white/50 dark:bg-black/20 backdrop-blur-sm border border-slate-200 dark:border-white/10 rounded-2xl px-5 py-4 outline-none focus:ring-2 focus:ring-purple-500/50 text-slate-700 dark:text-slate-300 font-medium transition-all disabled:opacity-50 disabled:cursor-not-allowed"
               />
             </div>
           </div>

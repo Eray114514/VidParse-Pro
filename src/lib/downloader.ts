@@ -14,7 +14,8 @@ export async function invokeTauriDownload(targetUrl: string, platform: "bilibili
     targetDir = await downloadDir();
   }
 
-  const sessdata = localStorage.getItem("sessdata");
+  const cookieBrowser = localStorage.getItem("cookieBrowser") || "none";
+  const cookieString = localStorage.getItem("cookieString") || localStorage.getItem("sessdata");
   
   let finalUrl = targetUrl;
   if (platform === "bilibili" && targetUrl.startsWith("BV")) {
@@ -33,8 +34,13 @@ export async function invokeTauriDownload(targetUrl: string, platform: "bilibili
       '--newline'
     ];
 
-    if (platform === "bilibili" && sessdata) {
-      args.push('--add-header', `Cookie: SESSDATA=${sessdata}`);
+    if (platform === "bilibili") {
+      if (cookieBrowser !== "none") {
+        args.push('--cookies-from-browser', cookieBrowser);
+      } else if (cookieString) {
+        const headerValue = cookieString.includes('=') ? cookieString : `SESSDATA=${cookieString}`;
+        args.push('--add-header', `Cookie: ${headerValue}`);
+      }
     }
 
     const command = Command.sidecar("binaries/yt-dlp", args);

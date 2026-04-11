@@ -91,10 +91,12 @@ export default function Home() {
       const platform = isBilibili ? "bilibili" : "youtube";
       const endpoint = isTauri() ? "https://vidparse-pro.vercel.app/api/parse/" + platform : `/api/parse/${platform}`;
 
+      const cookieString = localStorage.getItem("cookieString") || localStorage.getItem("sessdata") || "";
+
       const res = await fetch(endpoint, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ url }),
+        body: JSON.stringify({ url, cookie: cookieString }),
       });
 
       const data = await res.json();

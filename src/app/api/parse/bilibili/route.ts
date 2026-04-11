@@ -13,6 +13,7 @@ export async function POST(req: Request) {
   try {
     const body = await req.json();
     const url = body.url;
+    const userCookie = body.cookie;
 
     if (!url) {
       return NextResponse.json({ error: 'Bilibili URL is required' }, { status: 400 });
@@ -56,12 +57,23 @@ export async function POST(req: Request) {
     // 1. Official API Fallback
     if (idType && idValue) {
       try {
+        // Prepare headers with optional cookie
+        const sessdata = process.env.SESSDATA;
+        const apiHeaders: Record<string, string> = {
+          'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36',
+          'Referer': 'https://www.bilibili.com'
+        };
+        
+        if (userCookie) {
+          apiHeaders['Cookie'] = userCookie.includes('=') ? userCookie : `SESSDATA=${userCookie}`;
+        } else if (sessdata) {
+          apiHeaders['Cookie'] = `SESSDATA=${sessdata}`;
+        }
+
         // Step 1: Get Video Info (CID, Title, Cover)
         const infoApiUrl = `https://api.bilibili.com/x/web-interface/view?${idType}=${idValue}`;
         const infoRes = await fetch(infoApiUrl, {
-          headers: {
-            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
-          }
+          headers: apiHeaders
         });
         const infoData = await infoRes.json();
         
@@ -71,18 +83,9 @@ export async function POST(req: Request) {
           cid = infoData.data.cid;
           
           // Step 2: Get Play URL
-          const sessdata = process.env.SESSDATA;
-          const headers: Record<string, string> = {
-            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36',
-            'Referer': 'https://www.bilibili.com'
-          };
-          if (sessdata) {
-            headers['Cookie'] = `SESSDATA=${sessdata}`;
-          }
-
           // qn=80 corresponds to 1080P, fnval=1 for mp4 (fnval=0 is flv)
           const playApiUrl = `https://api.bilibili.com/x/player/playurl?cid=${cid}&qn=80&fnval=1&${idType}=${idValue}`;
-          const playRes = await fetch(playApiUrl, { headers });
+          const playRes = await fetch(playApiUrl, { headers: apiHeaders });
           const playData = await playRes.json();
 
           if (playData.code === 0 && playData.data && playData.data.durl && playData.data.durl.length > 0) {
