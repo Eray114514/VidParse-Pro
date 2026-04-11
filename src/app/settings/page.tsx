@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { isTauri, isTauriMobile } from "@/lib/env";
-import { Folder, Key, ShieldCheck, Globe, MonitorUp, Server } from "lucide-react";
+import { Folder, Key, ShieldCheck, Globe, MonitorUp, Server, RefreshCcw } from "lucide-react";
 
 export default function SettingsPage() {
   const [downloadPath, setDownloadPath] = useState("");
@@ -11,6 +11,7 @@ export default function SettingsPage() {
   const [maxQuality, setMaxQuality] = useState("80"); // 80: 1080P, 116/120: 4K
   const [apiEndpoint, setApiEndpoint] = useState("");
   const [mounted, setMounted] = useState(false);
+  const [updateStatus, setUpdateStatus] = useState("");
 
   useEffect(() => {
     setMounted(true);
@@ -70,6 +71,45 @@ export default function SettingsPage() {
     localStorage.setItem("apiEndpoint", "https://vidparse-pro.vercel.app");
   };
 
+  const checkForUpdates = async () => {
+    try {
+      setUpdateStatus("正在检查更新...");
+      const { check } = await import("@tauri-apps/plugin-updater");
+      const { ask, message } = await import("@tauri-apps/plugin-dialog");
+      const { relaunch } = await import("@tauri-apps/plugin-process");
+      
+      const update = await check();
+      if (update) {
+        setUpdateStatus(`发现新版本: ${update.version}`);
+        const yes = await ask(`发现新版本 ${update.version}，是否现在下载并安装？\n更新内容:\n${update.body || '无'}`, {
+          title: '更新可用',
+          kind: 'info',
+        });
+        if (yes) {
+          setUpdateStatus("正在下载并安装更新...");
+          await update.downloadAndInstall((event) => {
+            if (event.event === 'Started') {
+              setUpdateStatus(`开始下载: ${event.data.contentLength} bytes`);
+            } else if (event.event === 'Progress') {
+              setUpdateStatus(`下载中...`);
+            } else if (event.event === 'Finished') {
+              setUpdateStatus('下载完成，准备安装');
+            }
+          });
+          await message('更新安装成功，即将重启应用。', { title: '更新成功', kind: 'info' });
+          await relaunch();
+        } else {
+          setUpdateStatus("已取消更新");
+        }
+      } else {
+        setUpdateStatus("当前已是最新版本");
+      }
+    } catch (e: any) {
+      console.error(e);
+      setUpdateStatus("检查更新失败: " + e.message);
+    }
+  };
+
   if (!mounted) return null;
 
   if (!isTauri()) {
@@ -93,6 +133,39 @@ export default function SettingsPage() {
       </div>
 
       <div className="grid gap-6">
+        {/* App Update Card */}
+        {isTauri() && !isTauriMobile() && (
+          <div className="bg-white/70 dark:bg-[#1a1a1e]/70 backdrop-blur-xl p-8 rounded-3xl shadow-sm border border-slate-200/50 dark:border-white/5 relative overflow-hidden group transition-colors">
+            <div className="absolute top-0 right-0 p-8 opacity-5 group-hover:opacity-10 transition-opacity pointer-events-none">
+              <RefreshCcw className="w-32 h-32" />
+            </div>
+            <div className="relative z-10 space-y-4">
+              <div className="flex items-center gap-3">
+                <div className="p-2.5 rounded-2xl bg-blue-500/10 text-blue-600 dark:text-blue-400 shadow-inner">
+                  <RefreshCcw className="w-6 h-6" />
+                </div>
+                <h3 className="text-xl font-bold">软件更新</h3>
+              </div>
+              <p className="text-sm text-slate-500 dark:text-slate-400 font-medium">
+                检查是否有新版本可用。当前已配置自动通过国内加速节点下载更新。
+              </p>
+              <div className="flex items-center gap-4 pt-2">
+                <button
+                  onClick={checkForUpdates}
+                  className="px-8 py-4 bg-blue-600 hover:bg-blue-700 text-white rounded-2xl font-bold transition-all duration-300 shadow-md hover:shadow-lg hover:-translate-y-0.5 whitespace-nowrap"
+                >
+                  检查更新
+                </button>
+                {updateStatus && (
+                  <span className="text-sm font-medium text-slate-600 dark:text-slate-400">
+                    {updateStatus}
+                  </span>
+                )}
+              </div>
+            </div>
+          </div>
+        )}
+
         {/* Download Directory Card */}
         <div className="bg-white/70 dark:bg-[#1a1a1e]/70 backdrop-blur-xl p-8 rounded-3xl shadow-sm border border-slate-200/50 dark:border-white/5 relative overflow-hidden group transition-colors">
           <div className="absolute top-0 right-0 p-8 opacity-5 group-hover:opacity-10 transition-opacity pointer-events-none">

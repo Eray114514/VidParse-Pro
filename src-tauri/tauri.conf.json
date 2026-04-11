@@ -1,7 +1,7 @@
 {
   "$schema": "../node_modules/@tauri-apps/cli/config.schema.json",
   "productName": "vidparse-pro",
-  "version": "1.1.0",
+  "version": "1.2.0",
   "identifier": "com.vidparsepro.desktop",
   "build": {
     "frontendDist": "../out",
@@ -48,6 +48,14 @@
         "installMode": "currentUser",
         "displayLanguageSelector": false
       }
+    }
+  },
+  "plugins": {
+    "updater": {
+      "pubkey": "dW50cnVzdGVkIGNvbW1lbnQ6IG1pbmlzaWduIHB1YmxpYyBrZXk6IEE0QUNEMEZBQjUyMUMwMUYKUldRZndDRzErdENzcEc5eWtTRGQ1cjEzaTlUSUZUd1Zha0Q0dWRWYUZnOHpLMEh0OVVDK1MxdXoK",
+      "endpoints": [
+        "https://vidprase.eray.top/api/updater?version={{current_version}}&target={{target}}&arch={{arch}}"
+      ]
     }
   }
 }

@@ -7,7 +7,24 @@ on:
   workflow_dispatch:
 
 jobs:
+  create-release:
+    permissions:
+      contents: write
+    runs-on: ubuntu-latest
+    steps:
+      - name: Create Release
+        uses: softprops/action-gh-release@v1
+        with:
+          tag_name: ${{ github.ref_name }}
+          name: "VidParse Pro ${{ github.ref_name }}"
+          draft: false
+          prerelease: false
+          generate_release_notes: true
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
   build-windows:
+    needs: create-release
     permissions:
       contents: write
     runs-on: windows-latest
@@ -53,6 +70,8 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           TAURI_BUILD: "true"
+          TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_PRIVATE_KEY }}
+          TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ${{ secrets.TAURI_KEY_PASSWORD }}
         with:
           tagName: ${{ github.ref_name }}
           releaseName: "VidParse Pro ${{ github.ref_name }}"
@@ -64,8 +83,7 @@ jobs:
     permissions:
       contents: write
     runs-on: ubuntu-latest
-    # Optional: run android build after windows to avoid race conditions creating the release
-    needs: build-windows
+    needs: create-release
 
     steps:
       - name: Checkout repository
