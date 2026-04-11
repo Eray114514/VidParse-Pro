@@ -46,9 +46,12 @@ jobs:
           NDK_HOME: ${{ env.ANDROID_NDK_LATEST_HOME }}
         run: npx tauri android build --apk
 
+      - name: Rename APK
+        run: mv src-tauri/gen/android/app/build/outputs/apk/universal/release/app-universal-release-unsigned.apk src-tauri/gen/android/app/build/outputs/apk/universal/release/VidParse-Pro-Android-v1.1.0.apk
+
       - name: Upload Release
         uses: softprops/action-gh-release@v1
         with:
-          files: src-tauri/gen/android/app/build/outputs/apk/universal/release/app-universal-release.apk
+          files: src-tauri/gen/android/app/build/outputs/apk/universal/release/VidParse-Pro-Android-v1.1.0.apk
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
