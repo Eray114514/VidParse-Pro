@@ -1,5 +1,58 @@
 import { isTauri, isTauriMobile } from "./env";
 
+export async function parseVideoLocal(targetUrl: string, platform: "bilibili" | "youtube") {
+  const { Command } = await import("@tauri-apps/plugin-shell");
+  const cookieBrowser = localStorage.getItem("cookieBrowser") || "none";
+  const cookieString = localStorage.getItem("cookieString") || localStorage.getItem("sessdata");
+
+  let finalUrl = targetUrl;
+  if (platform === "bilibili" && targetUrl.startsWith("BV")) {
+    finalUrl = `https://www.bilibili.com/video/${targetUrl}`;
+  }
+
+  const args = [
+    '--dump-json',
+    '--no-warnings',
+    finalUrl
+  ];
+
+  if (platform === "bilibili") {
+    if (cookieBrowser !== "none") {
+      args.push('--cookies-from-browser', cookieBrowser);
+    } else if (cookieString) {
+      const headerValue = cookieString.includes('=') ? cookieString : `SESSDATA=${cookieString}`;
+      args.push('--add-header', `Cookie: ${headerValue}`);
+    }
+  }
+
+  const command = Command.sidecar("binaries/yt-dlp", args);
+  const output = await command.execute();
+
+  if (output.code !== 0) {
+    throw new Error("本地引擎解析失败: " + output.stderr);
+  }
+
+  const data = JSON.parse(output.stdout);
+
+  let playableUrl = data.url;
+  if (!playableUrl && data.formats) {
+    // Find best format with both video and audio for preview
+    const formats = data.formats.filter((f: any) => f.vcodec !== 'none' && f.acodec !== 'none');
+    if (formats.length > 0) {
+      playableUrl = formats[formats.length - 1].url;
+    }
+  }
+
+  return {
+    title: data.title || "未知标题",
+    cover: data.thumbnail || "",
+    downloadUrl: playableUrl || finalUrl,
+    platform,
+    parseMethod: "yt-dlp (本地离线引擎)",
+    rawBvid: targetUrl
+  };
+}
+
 export async function invokeTauriDownload(targetUrl: string, platform: "bilibili" | "youtube") {
   if (!isTauri()) {
     throw new Error("请在客户端中使用本地下载。");

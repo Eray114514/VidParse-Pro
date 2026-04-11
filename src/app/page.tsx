@@ -4,7 +4,7 @@ import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Loader2, Search, Download, AlertTriangle, Play, Check, Camera } from "lucide-react";
 import { isTauri, isTauriMobile } from "@/lib/env";
-import { invokeTauriDownload } from "@/lib/downloader";
+import { invokeTauriDownload, parseVideoLocal } from "@/lib/downloader";
 
 interface ParsedResult {
   title: string;
@@ -89,46 +89,54 @@ export default function Home() {
       let rawBvid = bvidMatch ? bvidMatch[0] : undefined;
 
       const platform = isBilibili ? "bilibili" : "youtube";
-      const customEndpoint = isTauri() ? (localStorage.getItem("apiEndpoint") || "https://vidparse-pro.vercel.app") : "";
-      
-      // Clean up trailing slash from customEndpoint if present
-      const cleanEndpoint = customEndpoint.replace(/\/$/, "");
-      const endpoint = isTauri() ? `${cleanEndpoint}/api/parse/${platform}` : `/api/parse/${platform}`;
 
-      const cookieString = isTauri() ? (localStorage.getItem("cookieString") || "") : "";
+      if (isTauri() && !isTauriMobile()) {
+        // Desktop Windows/macOS App: Self-contained local parsing (NO Vercel dependency)
+        const localData = await parseVideoLocal(url, platform);
+        setResult(localData as ParsedResult);
+      } else {
+        // Web or Android App: Uses Vercel / Custom API endpoint
+        const customEndpoint = isTauri() ? (localStorage.getItem("apiEndpoint") || "https://vidparse-pro.vercel.app") : "";
+        
+        // Clean up trailing slash from customEndpoint if present
+        const cleanEndpoint = customEndpoint.replace(/\/$/, "");
+        const endpoint = isTauri() ? `${cleanEndpoint}/api/parse/${platform}` : `/api/parse/${platform}`;
 
-      const res = await fetch(endpoint, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ url, cookie: cookieString }),
-      }).catch(err => {
-        if (err.message.includes('Failed to fetch')) {
-          throw new Error("网络连接失败。请检查您的网络，或在设置页配置可用的云端解析节点。");
+        const cookieString = isTauri() ? (localStorage.getItem("cookieString") || "") : "";
+
+        const res = await fetch(endpoint, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ url, cookie: cookieString }),
+        }).catch(err => {
+          if (err.message.includes('Failed to fetch')) {
+            throw new Error("网络连接失败。请检查您的网络，或在设置页配置可用的云端解析节点。");
+          }
+          throw err;
+        });
+
+        const data = await res.json();
+
+        if (!res.ok) {
+          throw new Error(data.error || "解析失败，请重试");
         }
-        throw err;
-      });
 
-      const data = await res.json();
+        const rawDownloadUrl = data.sourceUrl || data.url || "";
+        const parseMethod = platform === 'bilibili' ? (data.fallbackUsed || "unknown") : (data.source || "unknown");
+        
+        const downloadUrl = (platform === 'bilibili' && ['official', 'injahow'].includes(parseMethod)) 
+          ? (isTauri() ? rawDownloadUrl : `/api/proxy?url=${encodeURIComponent(rawDownloadUrl)}`)
+          : rawDownloadUrl;
 
-      if (!res.ok) {
-        throw new Error(data.error || "解析失败，请重试");
+        setResult({
+          title: data.title || "未知标题",
+          cover: data.cover || "",
+          downloadUrl,
+          platform,
+          parseMethod,
+          rawBvid
+        });
       }
-
-      const rawDownloadUrl = data.sourceUrl || data.url || "";
-      const parseMethod = platform === 'bilibili' ? (data.fallbackUsed || "unknown") : (data.source || "unknown");
-      
-      const downloadUrl = (platform === 'bilibili' && ['official', 'injahow'].includes(parseMethod)) 
-        ? (isTauri() ? rawDownloadUrl : `/api/proxy?url=${encodeURIComponent(rawDownloadUrl)}`)
-        : rawDownloadUrl;
-
-      setResult({
-        title: data.title || "未知标题",
-        cover: data.cover || "",
-        downloadUrl,
-        platform,
-        parseMethod,
-        rawBvid
-      });
     } catch (err: any) {
       setError(err.message || "发生未知错误");
     } finally {
