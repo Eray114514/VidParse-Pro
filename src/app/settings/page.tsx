@@ -2,7 +2,8 @@
 
 import { useState, useEffect } from "react";
 import { isTauri, isTauriMobile } from "@/lib/env";
-import { Folder, Key, ShieldCheck, Globe, MonitorUp, Server, RefreshCcw } from "lucide-react";
+import { Folder, Key, ShieldCheck, Globe, MonitorUp, Server, RefreshCcw, SunMoon } from "lucide-react";
+import { useTheme } from "next-themes";
 
 export default function SettingsPage() {
   const [downloadPath, setDownloadPath] = useState("");
@@ -12,6 +13,7 @@ export default function SettingsPage() {
   const [apiEndpoint, setApiEndpoint] = useState("");
   const [mounted, setMounted] = useState(false);
   const [updateStatus, setUpdateStatus] = useState("");
+  const { theme, setTheme } = useTheme();
 
   useEffect(() => {
     setMounted(true);
@@ -133,6 +135,35 @@ export default function SettingsPage() {
       </div>
 
       <div className="grid gap-6">
+        {/* Theme Settings Card */}
+        <div className="bg-white/70 dark:bg-[#1a1a1e]/70 backdrop-blur-xl p-8 rounded-3xl shadow-sm border border-slate-200/50 dark:border-white/5 relative overflow-hidden group transition-colors">
+          <div className="absolute top-0 right-0 p-8 opacity-5 group-hover:opacity-10 transition-opacity pointer-events-none">
+            <SunMoon className="w-32 h-32" />
+          </div>
+          <div className="relative z-10 space-y-4">
+            <div className="flex items-center gap-3">
+              <div className="p-2.5 rounded-2xl bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 shadow-inner">
+                <SunMoon className="w-6 h-6" />
+              </div>
+              <h3 className="text-xl font-bold">主题外观</h3>
+            </div>
+            <p className="text-sm text-slate-500 dark:text-slate-400 font-medium">
+              选择适合您的界面显示主题，支持跟随系统或者强制亮/暗色。
+            </p>
+            <div className="pt-2">
+              <select
+                value={theme}
+                onChange={(e) => setTheme(e.target.value)}
+                className="w-full bg-white/50 dark:bg-black/20 backdrop-blur-sm border border-slate-200 dark:border-white/10 rounded-2xl px-5 py-4 outline-none focus:ring-2 focus:ring-indigo-500/50 text-slate-700 dark:text-slate-300 font-medium transition-all appearance-none cursor-pointer"
+              >
+                <option value="system">跟随系统</option>
+                <option value="light">浅色模式</option>
+                <option value="dark">深色模式</option>
+              </select>
+            </div>
+          </div>
+        </div>
+
         {/* App Update Card */}
         {isTauri() && !isTauriMobile() && (
           <div className="bg-white/70 dark:bg-[#1a1a1e]/70 backdrop-blur-xl p-8 rounded-3xl shadow-sm border border-slate-200/50 dark:border-white/5 relative overflow-hidden group transition-colors">
