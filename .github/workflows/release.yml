@@ -121,6 +121,17 @@ jobs:
           jq 'del(.bundle.externalBin)' src-tauri/tauri.conf.json > src-tauri/tauri.conf.tmp.json && mv src-tauri/tauri.conf.tmp.json src-tauri/tauri.conf.json
           npx tauri android init
 
+      - name: Configure Android Project (Icons & Keystore)
+        run: |
+          # Copy custom icons
+          cp -r src-tauri/icons/android/* src-tauri/gen/android/app/src/main/res/
+          # Configure keystore for signed release APK
+          cat << EOF > src-tauri/gen/android/keystore.properties
+          keyAlias=androidreleasekey
+          password=android
+          storeFile=${{ github.workspace }}/src-tauri/android-release.keystore
+          EOF
+
       - name: Build Tauri Android App
         env:
           TAURI_BUILD: "true"
@@ -130,7 +141,8 @@ jobs:
       - name: Rename APK
         run: |
           VERSION=${GITHUB_REF_NAME#v}
-          mv src-tauri/gen/android/app/build/outputs/apk/universal/release/app-universal-release-unsigned.apk src-tauri/gen/android/app/build/outputs/apk/universal/release/VidParse-Pro-Android-v${VERSION}.apk
+          mv src-tauri/gen/android/app/build/outputs/apk/universal/release/app-universal-release.apk src-tauri/gen/android/app/build/outputs/apk/universal/release/VidParse-Pro-Android-v${VERSION}.apk
+
 
       - name: Upload Release
         uses: softprops/action-gh-release@v1
