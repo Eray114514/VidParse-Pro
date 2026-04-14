@@ -141,13 +141,12 @@ jobs:
       - name: Rename APK
         run: |
           VERSION=${GITHUB_REF_NAME#v}
-          mv src-tauri/gen/android/app/build/outputs/apk/universal/release/app-universal-release.apk src-tauri/gen/android/app/build/outputs/apk/universal/release/VidParse-Pro-Android-v${VERSION}.apk
-
+          find src-tauri/gen/android/app/build/outputs/apk -name "*.apk" -type f -exec mv {} src-tauri/gen/android/app/build/outputs/apk/VidParse-Pro-Android-v${VERSION}.apk \;
 
       - name: Upload Release
         uses: softprops/action-gh-release@v1
         with:
           tag_name: ${{ github.ref_name }}
-          files: src-tauri/gen/android/app/build/outputs/apk/universal/release/VidParse-Pro-Android-v*.apk
+          files: src-tauri/gen/android/app/build/outputs/apk/VidParse-Pro-Android-v*.apk
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
