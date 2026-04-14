@@ -4,6 +4,17 @@ const isTauriBuild = process.env.TAURI_BUILD === 'true';
 
 const nextConfig: NextConfig = {
   output: isTauriBuild ? 'export' : 'standalone',
+  transpilePackages: [
+    '@tauri-apps/api',
+    '@tauri-apps/plugin-dialog',
+    '@tauri-apps/plugin-fs',
+    '@tauri-apps/plugin-os',
+    '@tauri-apps/plugin-process',
+    '@tauri-apps/plugin-shell',
+    '@tauri-apps/plugin-updater',
+    'lucide-react',
+    'framer-motion'
+  ],
   images: {
     unoptimized: isTauriBuild,
   },

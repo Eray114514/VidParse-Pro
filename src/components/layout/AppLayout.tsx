@@ -12,12 +12,11 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const { theme, setTheme } = useTheme();
   const [mounted, setMounted] = useState(false);
-  const [isApp, setIsApp] = useState(false);
+  const isApp = isTauri();
   const containerClass = "w-full max-w-5xl mx-auto px-6";
 
   useEffect(() => {
     setMounted(true);
-    setIsApp(isTauri());
   }, []);
 
   const navItems = [
@@ -26,11 +25,9 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
     { name: "偏好设置", href: "/settings", icon: Settings },
   ];
 
-  if (!mounted) return null;
-
   return (
     <div className="flex flex-col min-h-screen bg-slate-50 dark:bg-[#0a0a0c] text-slate-900 dark:text-slate-100 transition-colors duration-500 selection:bg-blue-500/30">
-      
+
       {/* 沉浸式全局背景光效 */}
       <div className="fixed inset-0 overflow-hidden pointer-events-none -z-10">
         <div className="absolute top-[-15%] right-[-10%] w-[600px] h-[600px] bg-blue-500/10 dark:bg-blue-600/10 rounded-full mix-blend-multiply dark:mix-blend-screen filter blur-[120px] opacity-70 animate-blob"></div>
@@ -102,11 +99,11 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
             className="w-10 h-10 rounded-full bg-white/50 dark:bg-white/5 backdrop-blur-md border border-slate-200/50 dark:border-white/10 flex items-center justify-center hover:bg-white dark:hover:bg-white/10 transition-all text-slate-700 dark:text-slate-300 shadow-sm active:scale-95"
             aria-label="Toggle theme"
           >
-            {theme === "dark" ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
+            {mounted && (theme === "dark" ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />)}
           </button>
         </header>
       )}
-      
+
       {/* 桌面端主题切换悬浮按钮 (放置于右下角) */}
       {/* 移除App端的悬浮主题切换按钮，按需求只在网页端展示，App端放入设置中 */}
 

@@ -18,6 +18,10 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="zh" suppressHydrationWarning>
+      <head>
+        {/* 为旧版 Android (Chrome 61) 注入现代 JS 特性 Polyfill */}
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/core-js-bundle/3.38.1/minified.js"></script>
+      </head>
       <body className={`${inter.className} min-h-screen selection:bg-primary/30 antialiased`}>
         <ThemeProvider
           attribute="class"

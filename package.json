@@ -1,14 +1,14 @@
 {
   "name": "workspace",
-  "version": "1.2.3",
+  "version": "1.2.4",
   "private": true,
   "scripts": {
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
-    "dev:tauri": "cross-env TAURI_BUILD=true next dev",
-    "build:tauri": "cross-env TAURI_BUILD=true next build",
+    "dev:tauri": "cross-env NEXT_PUBLIC_TAURI_BUILD=true TAURI_BUILD=true next dev",
+    "build:tauri": "cross-env NEXT_PUBLIC_TAURI_BUILD=true TAURI_BUILD=true next build",
     "tauri": "tauri"
   },
   "dependencies": {

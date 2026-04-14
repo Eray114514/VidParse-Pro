@@ -157,7 +157,20 @@ export default function Home() {
     }
   };
 
-  if (!mounted) return null;
+  if (!mounted) {
+    return (
+      <div className="w-full flex flex-col gap-8">
+        <div className="text-left space-y-4 mb-4">
+          <h2 className="text-4xl md:text-5xl font-extrabold tracking-tight drop-shadow-sm">
+            全能视频解析
+          </h2>
+          <p className="text-lg text-slate-600 dark:text-slate-300 max-w-2xl leading-relaxed font-medium">
+            支持 <span className="font-bold text-blue-600 dark:text-blue-400">B站</span> 与 <span className="font-bold text-red-500 dark:text-red-400">YouTube</span>，突破限制提取最高清直链。
+          </p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="w-full flex flex-col gap-8">
