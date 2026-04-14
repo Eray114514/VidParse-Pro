@@ -121,16 +121,10 @@ jobs:
           jq 'del(.bundle.externalBin)' src-tauri/tauri.conf.json > src-tauri/tauri.conf.tmp.json && mv src-tauri/tauri.conf.tmp.json src-tauri/tauri.conf.json
           npx tauri android init
 
-      - name: Configure Android Project (Icons & Keystore)
+      - name: Configure Android Project (Icons)
         run: |
           # Copy custom icons
           cp -r src-tauri/icons/android/* src-tauri/gen/android/app/src/main/res/
-          # Configure keystore for signed release APK
-          cat << EOF > src-tauri/gen/android/keystore.properties
-          keyAlias=androidreleasekey
-          password=android
-          storeFile=${{ github.workspace }}/src-tauri/android-release.keystore
-          EOF
 
       - name: Build Tauri Android App
         env:
@@ -138,15 +132,32 @@ jobs:
           NDK_HOME: ${{ env.ANDROID_NDK_LATEST_HOME }}
         run: npx tauri android build --apk
 
-      - name: Rename APK
+      - name: Sign APK
         run: |
           VERSION=${GITHUB_REF_NAME#v}
-          find src-tauri/gen/android/app/build/outputs/apk -name "*.apk" -type f -exec mv {} src-tauri/gen/android/app/build/outputs/apk/VidParse-Pro-Android-v${VERSION}.apk \;
+          APK_PATH=$(find src-tauri/gen/android/app/build/outputs/apk -name "*.apk" -type f | head -n 1)
+          echo "Found APK: $APK_PATH"
+          
+          BUILD_TOOLS=$(ls -d $ANDROID_HOME/build-tools/* | sort -V | tail -1)
+          echo "Using Build Tools: $BUILD_TOOLS"
+          
+          $BUILD_TOOLS/zipalign -v -p 4 "$APK_PATH" aligned.apk
+          $BUILD_TOOLS/apksigner sign --ks src-tauri/android-release.keystore \
+            --ks-pass pass:android \
+            --ks-key-alias androidreleasekey \
+            --key-pass pass:android \
+            --out VidParse-Pro-Android-v${VERSION}.apk \
+            aligned.apk
+            
+          $BUILD_TOOLS/apksigner verify -v VidParse-Pro-Android-v${VERSION}.apk
+          
+          mkdir -p release-apk
+          mv VidParse-Pro-Android-v${VERSION}.apk release-apk/
 
       - name: Upload Release
         uses: softprops/action-gh-release@v1
         with:
           tag_name: ${{ github.ref_name }}
-          files: src-tauri/gen/android/app/build/outputs/apk/VidParse-Pro-Android-v*.apk
+          files: release-apk/VidParse-Pro-Android-v*.apk
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
