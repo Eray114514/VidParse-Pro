@@ -4,6 +4,8 @@ const isTauriBuild = process.env.TAURI_BUILD === 'true';
 
 const nextConfig: NextConfig = {
   output: isTauriBuild ? 'export' : 'standalone',
+  trailingSlash: isTauriBuild,
+  assetPrefix: isTauriBuild ? './' : undefined,
   transpilePackages: [
     '@tauri-apps/api',
     '@tauri-apps/plugin-dialog',
