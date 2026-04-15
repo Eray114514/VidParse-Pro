@@ -1,5 +1,3 @@
-import { NextResponse } from 'next/server';
-
 export const runtime = 'edge';
 
 export async function GET(req: Request) {
@@ -10,8 +8,26 @@ export async function GET(req: Request) {
     return new Response('URL is required', { status: 400 });
   }
 
+  let parsedUrl: URL;
   try {
-    const fetchResponse = await fetch(url, {
+    parsedUrl = new URL(url);
+  } catch {
+    return new Response('Invalid URL', { status: 400 });
+  }
+
+  if (parsedUrl.protocol !== 'http:' && parsedUrl.protocol !== 'https:') {
+    return new Response('Invalid URL protocol', { status: 400 });
+  }
+
+  const host = parsedUrl.hostname.toLowerCase();
+  const allowedHostSuffixes = ['bilibili.com', 'bilivideo.com', 'hdslb.com', 'biliapi.net', 'akamaized.net'];
+  const hostAllowed = allowedHostSuffixes.some((suffix) => host === suffix || host.endsWith(`.${suffix}`));
+  if (!hostAllowed) {
+    return new Response('URL host not allowed', { status: 400 });
+  }
+
+  try {
+    const fetchResponse = await fetch(parsedUrl.toString(), {
       headers: {
         'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36',
         'Referer': 'https://www.bilibili.com'

@@ -244,7 +244,7 @@ export default function SettingsPage() {
               <h3 className="text-xl font-bold">Bilibili 身份鉴权 (Cookie)</h3>
             </div>
             <p className="text-sm text-slate-500 dark:text-slate-400 font-medium max-w-2xl leading-relaxed">
-              配置 Cookie 可突破画质限制，下载 1080P/4K 高码率视频（需本身是大会员）。推荐客户端用户直接使用“提取浏览器”功能。网页端用户可手动填写 Cookie 字符串。
+              配置 Cookie 可突破画质限制，下载 1080P/4K 高码率视频（需本身是大会员）。推荐客户端用户直接使用“提取浏览器”功能。若要给 Web 端部署解锁画质，请在云端设置环境变量 BILIBILI_COOKIE 或 SESSDATA。
             </p>
 
             {isTauri() && (

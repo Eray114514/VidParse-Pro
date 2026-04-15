@@ -14,6 +14,9 @@ interface ParsedResult {
   duration?: string;
   parseMethod?: string;
   rawBvid?: string;
+  requestId?: string;
+  quality?: number;
+  requestedQuality?: number;
 }
 
 export default function Home() {
@@ -40,7 +43,7 @@ export default function Home() {
   };
 
   const handleDemoClick = () => {
-    setUrl("https://www.bilibili.com/video/BV1GJ411x7h7");
+    setUrl("https://www.bilibili.com/video/BV1HyQ5BgEgo");
   };
 
   const handleCapture = () => {
@@ -85,8 +88,8 @@ export default function Home() {
         throw new Error("目前仅支持 Bilibili 和 YouTube 链接。");
       }
 
-      let bvidMatch = url.match(/BV[a-zA-Z0-9]+/);
-      let rawBvid = bvidMatch ? bvidMatch[0] : undefined;
+      const bvidMatch = url.match(/BV[a-zA-Z0-9]+/);
+      const rawBvid = bvidMatch ? bvidMatch[0] : undefined;
 
       const platform = isBilibili ? "bilibili" : "youtube";
 
@@ -103,11 +106,12 @@ export default function Home() {
         const endpoint = isTauri() ? `${cleanEndpoint}/api/parse/${platform}` : `/api/parse/${platform}`;
 
         const cookieString = isTauri() ? (localStorage.getItem("cookieString") || "") : "";
+        const requestedQuality = isTauri() ? Number.parseInt(localStorage.getItem("maxQuality") || "80", 10) : undefined;
 
         const res = await fetch(endpoint, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ url, cookie: cookieString }),
+          body: JSON.stringify({ url, cookie: cookieString, requestedQuality }),
         }).catch(err => {
           if (err.message.includes('Failed to fetch')) {
             throw new Error("网络连接失败。请检查您的网络，或在设置页配置可用的云端解析节点。");
@@ -118,7 +122,8 @@ export default function Home() {
         const data = await res.json();
 
         if (!res.ok) {
-          throw new Error(data.error || "解析失败，请重试");
+          const reqIdSuffix = data?.requestId ? ` (requestId: ${data.requestId})` : "";
+          throw new Error((data.error || "解析失败，请重试") + reqIdSuffix);
         }
 
         const rawDownloadUrl = data.sourceUrl || data.url || "";
@@ -134,7 +139,10 @@ export default function Home() {
           downloadUrl,
           platform,
           parseMethod,
-          rawBvid
+          rawBvid,
+          requestId: data.requestId,
+          quality: data.quality,
+          requestedQuality: data.requestedQuality
         });
       }
     } catch (err: any) {
@@ -300,6 +308,25 @@ export default function Home() {
                 </h3>
 
                 <div className="flex-1 space-y-4">
+                  {(result.parseMethod || result.requestId || result.quality) && (
+                    <div className="glass-panel rounded-2xl p-4">
+                      {result.parseMethod && (
+                        <div className="text-sm font-semibold text-slate-700 dark:text-slate-300">
+                          解析来源：{result.parseMethod}
+                        </div>
+                      )}
+                      {Number.isFinite(result.requestedQuality) && Number.isFinite(result.quality) && (
+                        <div className="text-xs text-slate-500 dark:text-slate-400 mt-1">
+                          画质：请求 {result.requestedQuality}，实际 {result.quality}
+                        </div>
+                      )}
+                      {result.requestId && (
+                        <div className="text-xs text-slate-500 dark:text-slate-400 mt-1">
+                          requestId：{result.requestId}
+                        </div>
+                      )}
+                    </div>
+                  )}
                   {isTauri() && !isTauriMobile() ? (
                     <button
                       onClick={handleLocalDownload}
