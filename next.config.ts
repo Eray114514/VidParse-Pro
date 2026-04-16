@@ -6,6 +6,7 @@ const nextConfig: NextConfig = {
   output: isTauriBuild ? 'export' : 'standalone',
   assetPrefix: isTauriBuild ? './' : undefined,
   trailingSlash: isTauriBuild,
+  ...(isTauriBuild ? { pageExtensions: ['tsx', 'jsx', 'mdx', 'md'] } : {}),
   transpilePackages: [
     'framer-motion',
     'lucide-react',
