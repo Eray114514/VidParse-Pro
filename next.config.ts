@@ -4,7 +4,6 @@ const isTauriBuild = process.env.TAURI_ENV_PLATFORM !== undefined || process.env
 
 const nextConfig: NextConfig = {
   output: isTauriBuild ? 'export' : 'standalone',
-  assetPrefix: isTauriBuild ? './' : undefined,
   trailingSlash: isTauriBuild,
   ...(isTauriBuild ? { pageExtensions: ['tsx', 'jsx', 'mdx', 'md'] } : {}),
   transpilePackages: [
