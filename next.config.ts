@@ -4,6 +4,8 @@ const isTauriBuild = process.env.TAURI_BUILD === 'true';
 
 const nextConfig: NextConfig = {
   output: isTauriBuild ? 'export' : 'standalone',
+  trailingSlash: isTauriBuild,
+  ...(isTauriBuild ? { pageExtensions: ['tsx', 'jsx', 'mdx', 'md'] } : {}),
   transpilePackages: [
     '@tauri-apps/api',
     '@tauri-apps/plugin-dialog',
@@ -18,7 +20,6 @@ const nextConfig: NextConfig = {
   images: {
     unoptimized: isTauriBuild,
   },
-  pageExtensions: isTauriBuild ? ['tsx', 'jsx'] : ['tsx', 'ts', 'jsx', 'js'],
   async headers() {
     if (isTauriBuild) return [];
     return [
