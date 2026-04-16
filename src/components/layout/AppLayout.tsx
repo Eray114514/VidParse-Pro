@@ -8,15 +8,28 @@ import { Search, Settings, Download, MonitorPlay, Sun, Moon } from "lucide-react
 import { useTheme } from "next-themes";
 import { isTauri } from "@/lib/env";
 
+// 检查是否是极老的设备 (Android <= 8)
+const isOldDevice = () => {
+  if (typeof window === "undefined") return false;
+  const match = navigator.userAgent.match(/Android\s([0-9]+)\./i);
+  if (match) {
+    const version = parseInt(match[1], 10);
+    return version > 0 && version <= 8;
+  }
+  return false;
+};
+
 export default function AppLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const { theme, setTheme } = useTheme();
   const [mounted, setMounted] = useState(false);
+  const [isOld, setIsOld] = useState(false);
   const isApp = isTauri();
   const containerClass = "w-full max-w-5xl mx-auto px-6";
 
   useEffect(() => {
     setMounted(true);
+    setIsOld(isOldDevice());
   }, []);
 
   const navItems = [
@@ -47,12 +60,15 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
                   const isActive = pathname === item.href;
                   return (
                     <Link key={item.href} href={item.href} className="relative px-5 py-2 rounded-full text-sm font-semibold transition-colors z-10 flex items-center gap-2 group">
-                      {isActive && (
+                      {isActive && !isOld && (
                         <motion.div
                           layoutId="desktop-nav-indicator"
                           className="absolute inset-0 bg-white dark:bg-[#2a2a2e] rounded-full shadow-sm border border-slate-200/50 dark:border-white/5"
                           transition={{ type: "spring", bounce: 0.2, duration: 0.6 }}
                         />
+                      )}
+                      {isActive && isOld && (
+                        <div className="absolute inset-0 bg-white dark:bg-[#2a2a2e] rounded-full shadow-sm border border-slate-200/50 dark:border-white/5" />
                       )}
                       <item.icon className={`w-4 h-4 relative z-10 transition-colors duration-300 ${isActive ? 'text-blue-600 dark:text-blue-400' : 'text-slate-400 dark:text-slate-500 group-hover:text-slate-900 dark:group-hover:text-white'}`} />
                       <span className={`relative z-10 transition-colors duration-300 ${isActive ? 'text-slate-900 dark:text-white' : 'text-slate-500 dark:text-slate-400 group-hover:text-slate-900 dark:group-hover:text-white'}`}>
@@ -104,23 +120,26 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
         </header>
       )}
 
-      {/* 桌面端主题切换悬浮按钮 (放置于右下角) */}
-      {/* 移除App端的悬浮主题切换按钮，按需求只在网页端展示，App端放入设置中 */}
-
       {/* 路由内容区 */}
       <main className={`flex-1 flex flex-col relative ${containerClass} ${isApp ? "pt-8 md:pt-28 pb-20 md:pb-12" : "pb-12"}`}>
-        <AnimatePresence mode="wait">
-          <motion.div
-            key={pathname}
-            initial={{ opacity: 0, x: 20 }}
-            animate={{ opacity: 1, x: 0 }}
-            exit={{ opacity: 0, x: -20 }}
-            transition={{ duration: 0.25, ease: "easeOut" }}
-            className="h-full w-full"
-          >
+        {isOld ? (
+          <div key={pathname} className="h-full w-full">
             {children}
-          </motion.div>
-        </AnimatePresence>
+          </div>
+        ) : (
+          <AnimatePresence mode="wait">
+            <motion.div
+              key={pathname}
+              initial={{ opacity: 0, x: 20 }}
+              animate={{ opacity: 1, x: 0 }}
+              exit={{ opacity: 0, x: -20 }}
+              transition={{ duration: 0.25, ease: "easeOut" }}
+              className="h-full w-full"
+            >
+              {children}
+            </motion.div>
+          </AnimatePresence>
+        )}
       </main>
     </div>
   );

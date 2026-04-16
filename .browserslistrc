@@ -1,6 +1,5 @@
->0.2%
-not dead
-not ie <= 11
-not op_mini all
 chrome >= 61
 android >= 8
+edge >= 79
+safari >= 12
+firefox >= 68

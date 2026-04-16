@@ -1,40 +1,23 @@
 import type { NextConfig } from "next";
 
-const isTauriBuild = process.env.TAURI_BUILD === 'true';
+const isTauriBuild = process.env.TAURI_ENV_PLATFORM !== undefined || process.env.npm_lifecycle_event === 'build:tauri';
 
 const nextConfig: NextConfig = {
   output: isTauriBuild ? 'export' : 'standalone',
-  trailingSlash: isTauriBuild,
   assetPrefix: isTauriBuild ? './' : undefined,
+  trailingSlash: isTauriBuild,
   transpilePackages: [
+    'framer-motion',
+    'lucide-react',
+    'tailwind-merge',
+    'clsx',
+    'zustand',
     '@tauri-apps/api',
     '@tauri-apps/plugin-dialog',
-    '@tauri-apps/plugin-fs',
-    '@tauri-apps/plugin-os',
-    '@tauri-apps/plugin-process',
-    '@tauri-apps/plugin-shell',
     '@tauri-apps/plugin-updater',
-    'lucide-react',
-    'framer-motion'
-  ],
-  images: {
-    unoptimized: isTauriBuild,
-  },
-  pageExtensions: isTauriBuild ? ['tsx', 'jsx'] : ['tsx', 'ts', 'jsx', 'js'],
-  async headers() {
-    if (isTauriBuild) return [];
-    return [
-      {
-        source: "/api/:path*",
-        headers: [
-          { key: "Access-Control-Allow-Credentials", value: "true" },
-          { key: "Access-Control-Allow-Origin", value: "*" },
-          { key: "Access-Control-Allow-Methods", value: "GET,OPTIONS,PATCH,DELETE,POST,PUT" },
-          { key: "Access-Control-Allow-Headers", value: "X-CSRF-Token, X-Requested-With, Accept, Accept-Version, Content-Length, Content-MD5, Content-Type, Date, X-Api-Version, Cookie" },
-        ]
-      }
-    ];
-  },
+    '@tauri-apps/plugin-process',
+    'next-themes'
+  ]
 };
 
 export default nextConfig;
