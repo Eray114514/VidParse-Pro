@@ -26,7 +26,12 @@ export async function parseVideoLocal(targetUrl: string, platform: "bilibili" | 
   }
 
   const command = Command.sidecar("binaries/yt-dlp", args);
-  const output = await command.execute();
+  let output;
+  try {
+    output = await command.execute();
+  } catch (err: any) {
+    throw new Error("执行 yt-dlp 失败: " + (err.message || JSON.stringify(err) || err));
+  }
 
   if (output.code !== 0) {
     throw new Error("本地引擎解析失败: " + output.stderr);
@@ -138,6 +143,7 @@ export async function invokeTauriDownload(targetUrl: string, platform: "bilibili
 
   } catch (error: any) {
     console.error("Failed to spawn sidecar", error);
-    throw new Error("下载启动失败，可能是缺少核心组件或权限: " + error.message);
+    const errMsg = error?.message || (typeof error === 'string' ? error : JSON.stringify(error));
+    throw new Error("下载启动失败，可能是缺少核心组件或权限: " + errMsg);
   }
 }

@@ -146,7 +146,9 @@ export default function Home() {
         });
       }
     } catch (err: any) {
-      setError(err.message || "发生未知错误");
+      console.error(err);
+      const errMsg = err?.message || (typeof err === 'string' ? err : JSON.stringify(err));
+      setError(errMsg || "发生未知错误");
     } finally {
       setLoading(false);
     }

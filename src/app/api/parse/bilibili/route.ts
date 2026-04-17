@@ -81,6 +81,7 @@ export async function POST(req: Request) {
     let cover = '';
     let cid = null;
 
+    let bestDowngradedResponse: BilibiliResponse | null = null;
     const attempts: Array<Record<string, any>> = [];
 
     // 1. Official API Fallback
@@ -133,15 +134,37 @@ export async function POST(req: Request) {
               playData.data.durl.length > 0 &&
               playData.data.durl[0]?.url
             ) {
+              const actualQuality = playData.data.quality || qn;
+              const acceptQuality = playData.data.accept_quality || [];
+
               const responseData: BilibiliResponse = {
                 sourceUrl: playData.data.durl[0].url,
                 requestId,
                 requestedQuality: qn,
-                quality: playData.data.quality || qn,
+                quality: actualQuality,
                 title,
                 cover,
                 fallbackUsed: 'official'
               };
+
+              if (actualQuality < qn && acceptQuality.includes(qn)) {
+                if (!bestDowngradedResponse) {
+                  bestDowngradedResponse = responseData;
+                }
+                attempts.push({
+                  requestId,
+                  source: 'official',
+                  stage: 'playurl',
+                  ok: false,
+                  qn,
+                  code: playData.code,
+                  message: `Downgraded to ${actualQuality}, trying fallbacks`,
+                  quality: actualQuality,
+                  cookieProvided
+                });
+                break; // Break the qn loop, go to Cobalt fallback
+              }
+
               return NextResponse.json(responseData);
             }
 
@@ -247,6 +270,11 @@ export async function POST(req: Request) {
     }
 
     // If all fail
+    if (bestDowngradedResponse) {
+      console.log('[bilibili-parse]', { requestId, step: 'all_fallbacks_failed_using_downgraded' });
+      return NextResponse.json(bestDowngradedResponse);
+    }
+
     console.error('[bilibili-parse]', { requestId, step: 'all_failed', finalUrl, attempts });
     return NextResponse.json(
       {
