@@ -18,13 +18,11 @@ export async function parseVideoLocal(targetUrl: string, platform: "bilibili" | 
     finalUrl
   ];
 
-  if (platform === "bilibili") {
-    if (cookieBrowser !== "none") {
-      args.push('--cookies-from-browser', cookieBrowser);
-    } else if (cookieString) {
-      const headerValue = cookieString.includes('=') ? cookieString : `SESSDATA=${cookieString}`;
-      args.push('--add-header', `Cookie: ${headerValue}`);
-    }
+  if (cookieBrowser !== "none") {
+    args.push('--cookies-from-browser', cookieBrowser);
+  } else if (platform === "bilibili" && cookieString) {
+    const headerValue = cookieString.includes('=') ? cookieString : `SESSDATA=${cookieString}`;
+    args.push('--add-header', `Cookie: ${headerValue}`);
   }
 
   const command = Command.sidecar(sidecarName, args);
@@ -109,13 +107,11 @@ export async function invokeTauriDownload(targetUrl: string, platform: "bilibili
       '--newline'
     ];
 
-    if (platform === "bilibili") {
-      if (cookieBrowser !== "none") {
-        args.push('--cookies-from-browser', cookieBrowser);
-      } else if (cookieString) {
-        const headerValue = cookieString.includes('=') ? cookieString : `SESSDATA=${cookieString}`;
-        args.push('--add-header', `Cookie: ${headerValue}`);
-      }
+    if (cookieBrowser !== "none") {
+      args.push('--cookies-from-browser', cookieBrowser);
+    } else if (platform === "bilibili" && cookieString) {
+      const headerValue = cookieString.includes('=') ? cookieString : `SESSDATA=${cookieString}`;
+      args.push('--add-header', `Cookie: ${headerValue}`);
     }
 
     const command = Command.sidecar(sidecarName, args);
