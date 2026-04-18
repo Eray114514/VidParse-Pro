@@ -118,7 +118,7 @@ jobs:
 
       - name: Initialize Android Project
         run: |
-          jq 'del(.bundle.externalBin)' src-tauri/tauri.conf.json > src-tauri/tauri.conf.tmp.json && mv src-tauri/tauri.conf.tmp.json src-tauri/tauri.conf.json
+          jq 'del(.bundle.externalBin) | del(.bundle.resources)' src-tauri/tauri.conf.json > src-tauri/tauri.conf.tmp.json && mv src-tauri/tauri.conf.tmp.json src-tauri/tauri.conf.json
           npx tauri android init
 
       - name: Configure Android Project (Icons)

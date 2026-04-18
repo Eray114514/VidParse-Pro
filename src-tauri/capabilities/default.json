@@ -17,6 +17,18 @@
       "identifier": "shell:allow-execute",
       "allow": [
         {
+          "name": "binaries/yt-dlp-x86_64-pc-windows-msvc",
+          "cmd": "",
+          "sidecar": true,
+          "args": true
+        },
+        {
+          "name": "yt-dlp-x86_64-pc-windows-msvc",
+          "cmd": "",
+          "sidecar": true,
+          "args": true
+        },
+        {
           "name": "binaries/yt-dlp",
           "cmd": "",
           "sidecar": true,

@@ -5,6 +5,8 @@ export async function parseVideoLocal(targetUrl: string, platform: "bilibili" | 
   const cookieBrowser = localStorage.getItem("cookieBrowser") || "none";
   const cookieString = localStorage.getItem("cookieString") || localStorage.getItem("sessdata");
 
+  const sidecarName = "binaries/yt-dlp-x86_64-pc-windows-msvc";
+
   let finalUrl = targetUrl;
   if (platform === "bilibili" && targetUrl.startsWith("BV")) {
     finalUrl = `https://www.bilibili.com/video/${targetUrl}`;
@@ -25,7 +27,7 @@ export async function parseVideoLocal(targetUrl: string, platform: "bilibili" | 
     }
   }
 
-  const command = Command.sidecar("binaries/yt-dlp", args);
+  const command = Command.sidecar(sidecarName, args);
   let output;
   try {
     output = await command.execute();
@@ -80,6 +82,8 @@ export async function invokeTauriDownload(targetUrl: string, platform: "bilibili
   const cookieString = localStorage.getItem("cookieString") || localStorage.getItem("sessdata");
   const maxQuality = localStorage.getItem("maxQuality") || "80";
   
+  const sidecarName = "binaries/yt-dlp-x86_64-pc-windows-msvc";
+
   let finalUrl = targetUrl;
   if (platform === "bilibili" && targetUrl.startsWith("BV")) {
     finalUrl = `https://www.bilibili.com/video/${targetUrl}`;
@@ -94,7 +98,9 @@ export async function invokeTauriDownload(targetUrl: string, platform: "bilibili
   }
 
   try {
-    const ffmpegPath = await resolveResource("binaries/ffmpeg.exe");
+    const ffmpegPath = await resolveResource("binaries/ffmpeg-x86_64-pc-windows-msvc.exe").catch(
+      () => resolveResource("binaries/ffmpeg.exe")
+    );
     
     const args = [
       finalUrl,
@@ -114,7 +120,7 @@ export async function invokeTauriDownload(targetUrl: string, platform: "bilibili
       }
     }
 
-    const command = Command.sidecar("binaries/yt-dlp", args);
+    const command = Command.sidecar(sidecarName, args);
 
     command.on('close', data => {
       console.log(`yt-dlp finished with code ${data.code} and signal ${data.signal}`);
