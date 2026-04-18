@@ -44,7 +44,13 @@
         "installMode": "currentUser",
         "displayLanguageSelector": false
       }
-    }
+    },
+    "externalBin": [
+      "binaries/yt-dlp"
+    ],
+    "resources": [
+      "binaries/ffmpeg.exe"
+    ]
   },
   "plugins": {
     "updater": {
