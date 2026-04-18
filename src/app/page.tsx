@@ -277,13 +277,13 @@ export default function Home() {
             <div className="lg:col-span-8 flex flex-col gap-6">
               <div className="relative rounded-3xl overflow-hidden shadow-2xl ring-1 ring-slate-200 dark:ring-white/10 bg-black/5 backdrop-blur-sm group aspect-video">
                 <video
-                  id="preview-video"
-                  src={result.downloadUrl}
-                  poster={result.cover}
-                  controls
-                  crossOrigin="anonymous"
-                  className="w-full h-full object-contain bg-black"
-                >
+                    id="preview-video"
+                    src={result.downloadUrl}
+                    poster={result.cover}
+                    controls
+                    referrerPolicy="no-referrer"
+                    className="w-full h-full object-contain bg-black"
+                  >
                   您的浏览器不支持视频播放。
                 </video>
                 <div className="absolute top-0 left-0 right-0 h-24 bg-gradient-to-b from-black/80 to-transparent pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>

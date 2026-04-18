@@ -23,6 +23,7 @@
           "args": true
         }
       ]
-    }
+    },
+    "shell:allow-spawn"
   ]
 }
