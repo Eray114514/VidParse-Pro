@@ -5,7 +5,7 @@ export async function parseVideoLocal(targetUrl: string, platform: "bilibili" | 
   const cookieBrowser = localStorage.getItem("cookieBrowser") || "none";
   const cookieString = localStorage.getItem("cookieString") || localStorage.getItem("sessdata");
 
-  const sidecarName = "binaries/yt-dlp-x86_64-pc-windows-msvc";
+  const sidecarName = "binaries/yt-dlp";
 
   let finalUrl = targetUrl;
   if (platform === "bilibili" && targetUrl.startsWith("BV")) {
@@ -82,7 +82,7 @@ export async function invokeTauriDownload(targetUrl: string, platform: "bilibili
   const cookieString = localStorage.getItem("cookieString") || localStorage.getItem("sessdata");
   const maxQuality = localStorage.getItem("maxQuality") || "80";
   
-  const sidecarName = "binaries/yt-dlp-x86_64-pc-windows-msvc";
+  const sidecarName = "binaries/yt-dlp";
 
   let finalUrl = targetUrl;
   if (platform === "bilibili" && targetUrl.startsWith("BV")) {
@@ -98,9 +98,7 @@ export async function invokeTauriDownload(targetUrl: string, platform: "bilibili
   }
 
   try {
-    const ffmpegPath = await resolveResource("binaries/ffmpeg-x86_64-pc-windows-msvc.exe").catch(
-      () => resolveResource("binaries/ffmpeg.exe")
-    );
+    const ffmpegPath = await resolveResource("binaries/ffmpeg.exe");
     
     const args = [
       finalUrl,

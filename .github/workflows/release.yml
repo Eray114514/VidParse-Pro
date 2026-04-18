@@ -61,7 +61,7 @@ jobs:
           Invoke-WebRequest -Uri https://github.com/yt-dlp/yt-dlp/releases/latest/download/yt-dlp.exe -OutFile src-tauri/binaries/yt-dlp-x86_64-pc-windows-msvc.exe
           Invoke-WebRequest -Uri https://github.com/BtbN/FFmpeg-Builds/releases/download/latest/ffmpeg-master-latest-win64-gpl.zip -OutFile ffmpeg.zip
           Expand-Archive ffmpeg.zip -DestinationPath .
-          Move-Item ffmpeg-master-latest-win64-gpl/bin/ffmpeg.exe src-tauri/binaries/ffmpeg-x86_64-pc-windows-msvc.exe
+          Move-Item ffmpeg-master-latest-win64-gpl/bin/ffmpeg.exe src-tauri/binaries/ffmpeg.exe
           Remove-Item ffmpeg.zip
           Remove-Item -Recurse -Force ffmpeg-master-latest-win64-gpl
 
