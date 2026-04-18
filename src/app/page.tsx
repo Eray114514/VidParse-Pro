@@ -281,7 +281,6 @@ export default function Home() {
                     src={result.downloadUrl}
                     poster={result.cover}
                     controls
-                    referrerPolicy="no-referrer"
                     className="w-full h-full object-contain bg-black"
                   >
                   您的浏览器不支持视频播放。
