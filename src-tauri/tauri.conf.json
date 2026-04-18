@@ -46,7 +46,8 @@
       }
     },
     "externalBin": [
-      "binaries/yt-dlp"
+      "binaries/yt-dlp",
+      "yt-dlp"
     ],
     "resources": [
       "binaries/ffmpeg.exe"

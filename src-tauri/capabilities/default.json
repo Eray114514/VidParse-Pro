@@ -21,6 +21,12 @@
           "cmd": "",
           "sidecar": true,
           "args": true
+        },
+        {
+          "name": "yt-dlp",
+          "cmd": "",
+          "sidecar": true,
+          "args": true
         }
       ]
     }
