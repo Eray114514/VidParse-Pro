@@ -18,7 +18,7 @@ export async function GET(request: Request) {
     });
 
     if (!res.ok) {
-      return new NextResponse('Failed to fetch latest release', { status: 500 });
+      return NextResponse.json({ error: 'Failed to fetch latest release' }, { status: 500 });
     }
 
     const data = await res.json();
@@ -32,26 +32,26 @@ export async function GET(request: Request) {
     // Find the Windows updater asset and sig
     const assets = data.assets || [];
     
-    // Tauri v2 updater requires .zip artifacts for Windows (like .nsis.zip or .msi.zip)
-    let exeAsset = assets.find((a: any) => a.name.endsWith('.nsis.zip') && a.name.includes('x64'));
+    // Tauri v2 on Windows outputs .exe (NSIS) or .msi installers, not necessarily .zip
+    let exeAsset = assets.find((a: any) => a.name.endsWith('setup.exe') && a.name.includes('x64'));
     if (!exeAsset) {
-      exeAsset = assets.find((a: any) => a.name.endsWith('.msi.zip') && a.name.includes('x64'));
+      exeAsset = assets.find((a: any) => a.name.endsWith('.msi') && a.name.includes('x64'));
     }
     // Fallback
     if (!exeAsset) {
-      exeAsset = assets.find((a: any) => a.name.endsWith('.zip') && a.name.includes('x64') && a.name.includes('VidParse'));
+      exeAsset = assets.find((a: any) => (a.name.endsWith('.exe') || a.name.endsWith('.zip')) && a.name.includes('x64') && a.name.includes('VidParse'));
     }
     
     let sigAsset = assets.find((a: any) => a.name === (exeAsset?.name + '.sig'));
     
     if (!exeAsset || !sigAsset) {
-      return new NextResponse('云端暂未就绪当前版本的更新文件，请稍后再试', { status: 404 });
+      return NextResponse.json({ error: '云端暂未就绪当前版本的更新文件，请稍后再试' }, { status: 404 });
     }
 
     // Fetch signature content
     const sigRes = await fetch(sigAsset.browser_download_url);
     if (!sigRes.ok) {
-      return new NextResponse('Failed to fetch signature', { status: 500 });
+      return NextResponse.json({ error: 'Failed to fetch signature' }, { status: 500 });
     }
     const signature = await sigRes.text();
 
@@ -73,6 +73,6 @@ export async function GET(request: Request) {
 
   } catch (error) {
     console.error('Updater error:', error);
-    return new NextResponse('Internal Server Error', { status: 500 });
+    return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });
   }
 }
