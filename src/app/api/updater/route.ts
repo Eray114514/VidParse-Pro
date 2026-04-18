@@ -29,17 +29,23 @@ export async function GET(request: Request) {
       return new NextResponse(null, { status: 204 });
     }
 
-    // Find the Windows setup exe and sig
+    // Find the Windows updater asset and sig
     const assets = data.assets || [];
-    let exeAsset = assets.find((a: any) => a.name.endsWith('setup.exe') && a.name.includes('x64'));
+    
+    // Tauri v2 updater requires .zip artifacts for Windows (like .nsis.zip or .msi.zip)
+    let exeAsset = assets.find((a: any) => a.name.endsWith('.nsis.zip') && a.name.includes('x64'));
     if (!exeAsset) {
-      exeAsset = assets.find((a: any) => a.name.endsWith('.exe'));
+      exeAsset = assets.find((a: any) => a.name.endsWith('.msi.zip') && a.name.includes('x64'));
+    }
+    // Fallback
+    if (!exeAsset) {
+      exeAsset = assets.find((a: any) => a.name.endsWith('.zip') && a.name.includes('x64') && a.name.includes('VidParse'));
     }
     
     let sigAsset = assets.find((a: any) => a.name === (exeAsset?.name + '.sig'));
     
     if (!exeAsset || !sigAsset) {
-      return new NextResponse('Release assets not ready', { status: 404 });
+      return new NextResponse('云端暂未就绪当前版本的更新文件，请稍后再试', { status: 404 });
     }
 
     // Fetch signature content

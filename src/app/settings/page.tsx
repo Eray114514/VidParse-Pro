@@ -108,7 +108,8 @@ export default function SettingsPage() {
       }
     } catch (e: any) {
       console.error(e);
-      setUpdateStatus("检查更新失败: " + e.message);
+      const errorMsg = e instanceof Error ? e.message : String(e);
+      setUpdateStatus("检查更新失败: " + errorMsg);
     }
   };
 
