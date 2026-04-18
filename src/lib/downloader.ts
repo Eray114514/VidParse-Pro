@@ -15,6 +15,8 @@ export async function parseVideoLocal(targetUrl: string, platform: "bilibili" | 
   const args = [
     '--dump-json',
     '--no-warnings',
+    '--ignore-errors',
+    '--no-check-certificates',
     finalUrl
   ];
 
@@ -28,16 +30,26 @@ export async function parseVideoLocal(targetUrl: string, platform: "bilibili" | 
   const command = Command.sidecar(sidecarName, args);
   let output;
   try {
+    // 增加一个 stdout 输出拦截，便于调试
     output = await command.execute();
   } catch (err: any) {
     throw new Error("执行 yt-dlp 失败: " + (err.message || JSON.stringify(err) || err));
   }
 
-  if (output.code !== 0) {
+  // yt-dlp 有时候遇到网络警告也会退出码非0，但实际上可能输出了有效 JSON
+  if (output.code !== 0 && !output.stdout.trim().startsWith("{")) {
     throw new Error("本地引擎解析失败: " + output.stderr);
   }
 
-  const data = JSON.parse(output.stdout);
+  let data;
+  try {
+    // 某些情况下 yt-dlp 输出可能混杂警告信息，我们尝试提取第一行有效的 JSON
+    const jsonStr = output.stdout.split('\n').find((line: string) => line.trim().startsWith('{')) || output.stdout;
+    data = JSON.parse(jsonStr);
+  } catch (e) {
+    console.error("yt-dlp raw output:", output.stdout);
+    throw new Error("解析 yt-dlp 输出失败 (JSON 格式异常)，可能是触发了反爬验证或网络拦截。");
+  }
 
   let playableUrl = data.url;
   if (!playableUrl && data.formats) {
