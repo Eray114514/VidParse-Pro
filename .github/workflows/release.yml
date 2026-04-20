@@ -116,26 +116,19 @@ jobs:
           npm version $VERSION --no-git-tag-version --allow-same-version
           jq '.version = "'$VERSION'"' src-tauri/tauri.conf.json > temp.json && mv temp.json src-tauri/tauri.conf.json
 
-      - name: Initialize Android Project
-        run: |
-          jq 'del(.bundle.externalBin) | del(.bundle.resources)' src-tauri/tauri.conf.json > src-tauri/tauri.conf.tmp.json && mv src-tauri/tauri.conf.tmp.json src-tauri/tauri.conf.json
-          npx tauri android init
-
-      - name: Configure Android Project (Icons)
+      - name: Build TWA Android App
         run: |
           # Copy custom icons
-          cp -r src-tauri/icons/android/* src-tauri/gen/android/app/src/main/res/
-
-      - name: Build Tauri Android App
-        env:
-          TAURI_BUILD: "true"
-          NDK_HOME: ${{ env.ANDROID_NDK_LATEST_HOME }}
-        run: npx tauri android build --apk
+          cp -r src-tauri/icons/android/* android-twa/app/src/main/res/
+          
+          cd android-twa
+          chmod +x gradlew
+          ./gradlew assembleRelease
 
       - name: Sign APK
         run: |
           VERSION=${GITHUB_REF_NAME#v}
-          APK_PATH=$(find src-tauri/gen/android/app/build/outputs/apk -name "*.apk" -type f | head -n 1)
+          APK_PATH=$(find android-twa/app/build/outputs/apk/release -name "*.apk" -type f | head -n 1)
           echo "Found APK: $APK_PATH"
           
           BUILD_TOOLS=$(ls -d $ANDROID_HOME/build-tools/* | sort -V | tail -1)
