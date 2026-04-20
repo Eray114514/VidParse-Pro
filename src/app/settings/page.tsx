@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { isTauri, isTauriMobile } from "@/lib/env";
+import { isAndroidShell, isTauri, isTauriMobile } from "@/lib/env";
 import { Folder, Key, ShieldCheck, Globe, MonitorUp, Server, RefreshCcw, SunMoon } from "lucide-react";
 import { useTheme } from "next-themes";
 
@@ -21,7 +21,8 @@ export default function SettingsPage() {
     setCookieString(localStorage.getItem("cookieString") || localStorage.getItem("sessdata") || "");
     setCookieBrowser(localStorage.getItem("cookieBrowser") || "none");
     setMaxQuality(localStorage.getItem("maxQuality") || "80");
-    setApiEndpoint(localStorage.getItem("apiEndpoint") || "https://vidparse-pro.vercel.app");
+    const defaultEndpoint = isAndroidShell() ? "" : "https://vidparse-pro.vercel.app";
+    setApiEndpoint(localStorage.getItem("apiEndpoint") || defaultEndpoint);
   }, []);
 
   const handleSelectDir = async () => {
@@ -69,8 +70,13 @@ export default function SettingsPage() {
   };
 
   const resetApiEndpoint = () => {
-    setApiEndpoint("https://vidparse-pro.vercel.app");
-    localStorage.setItem("apiEndpoint", "https://vidparse-pro.vercel.app");
+    const defaultEndpoint = isAndroidShell() ? "" : "https://vidparse-pro.vercel.app";
+    setApiEndpoint(defaultEndpoint);
+    if (defaultEndpoint) {
+      localStorage.setItem("apiEndpoint", defaultEndpoint);
+    } else {
+      localStorage.removeItem("apiEndpoint");
+    }
   };
 
   const checkForUpdates = async () => {
@@ -115,7 +121,7 @@ export default function SettingsPage() {
 
   if (!mounted) return null;
 
-  if (!isTauri()) {
+  if (!isTauri() && !isAndroidShell()) {
     return (
       <div className="w-full flex flex-col items-center justify-center min-h-[50vh] text-center gap-4">
         <h2 className="text-3xl font-bold">网页端无需配置</h2>
@@ -286,7 +292,7 @@ export default function SettingsPage() {
           </div>
         </div>
         {/* API Endpoint Card */}
-        {isTauriMobile() && (
+        {(isTauriMobile() || isAndroidShell()) && (
           <div className="bg-white/70 dark:bg-[#1a1a1e]/70 backdrop-blur-xl p-8 rounded-3xl shadow-sm border border-slate-200/50 dark:border-white/5 relative overflow-hidden group transition-colors">
             <div className="absolute top-0 right-0 p-8 opacity-5 group-hover:opacity-10 transition-opacity pointer-events-none">
               <Server className="w-32 h-32" />
@@ -299,7 +305,7 @@ export default function SettingsPage() {
                 <h3 className="text-xl font-bold">云端解析节点 (API Endpoint)</h3>
               </div>
               <p className="text-sm text-slate-500 dark:text-slate-400 font-medium">
-                默认使用 Vercel 节点。如果您所在的网络环境无法连接 (Failed to fetch)，您可以绑定自己的域名并填入下方。
+                填入可用的云端解析节点域名（需要部署本项目的 API 路由）。未填写将无法解析。
               </p>
               <div className="flex gap-3 pt-2">
                 <input

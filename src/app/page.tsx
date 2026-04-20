@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Loader2, Search, Download, AlertTriangle, Play, Check, Camera } from "lucide-react";
-import { isTauri, isTauriMobile } from "@/lib/env";
+import { isAndroidShell, isTauri, isTauriMobile } from "@/lib/env";
 import { invokeTauriDownload, parseVideoLocal } from "@/lib/downloader";
 
 interface ParsedResult {
@@ -99,14 +99,20 @@ export default function Home() {
         setResult(localData as ParsedResult);
       } else {
         // Web or Android App: Uses Vercel / Custom API endpoint
-        const customEndpoint = isTauri() ? (localStorage.getItem("apiEndpoint") || "https://vidparse-pro.vercel.app") : "";
-        
-        // Clean up trailing slash from customEndpoint if present
-        const cleanEndpoint = customEndpoint.replace(/\/$/, "");
-        const endpoint = isTauri() ? `${cleanEndpoint}/api/parse/${platform}` : `/api/parse/${platform}`;
+        const useRemoteApi = isTauri() || isAndroidShell();
+        const customEndpoint = useRemoteApi
+          ? (localStorage.getItem("apiEndpoint") || (isTauri() ? "https://vidparse-pro.vercel.app" : ""))
+          : "";
 
-        const cookieString = isTauri() ? (localStorage.getItem("cookieString") || "") : "";
-        const requestedQuality = isTauri() ? Number.parseInt(localStorage.getItem("maxQuality") || "80", 10) : undefined;
+        if (useRemoteApi && !customEndpoint) {
+          throw new Error("请先在设置页填写云端解析节点 (API Endpoint)，否则将无法解析。");
+        }
+
+        const cleanEndpoint = customEndpoint.replace(/\/$/, "");
+        const endpoint = useRemoteApi ? `${cleanEndpoint}/api/parse/${platform}` : `/api/parse/${platform}`;
+
+        const cookieString = useRemoteApi ? (localStorage.getItem("cookieString") || "") : "";
+        const requestedQuality = useRemoteApi ? Number.parseInt(localStorage.getItem("maxQuality") || "80", 10) : undefined;
 
         const res = await fetch(endpoint, {
           method: "POST",
@@ -129,8 +135,9 @@ export default function Home() {
         const rawDownloadUrl = data.sourceUrl || data.url || "";
         const parseMethod = platform === 'bilibili' ? (data.fallbackUsed || "unknown") : (data.source || "unknown");
         
+        const proxyPrefix = useRemoteApi ? cleanEndpoint : "";
         const downloadUrl = (platform === 'bilibili' && ['official', 'injahow'].includes(parseMethod)) 
-          ? (isTauri() ? rawDownloadUrl : `/api/proxy?url=${encodeURIComponent(rawDownloadUrl)}`)
+          ? (isTauri() ? rawDownloadUrl : `${proxyPrefix}/api/proxy?url=${encodeURIComponent(rawDownloadUrl)}`)
           : rawDownloadUrl;
 
         setResult({

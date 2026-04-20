@@ -123,7 +123,7 @@ jobs:
           
           cd android-twa
           chmod +x gradlew
-          ./gradlew assembleRelease
+           APP_VERSION=$VERSION ./gradlew assembleRelease
 
       - name: Sign APK
         run: |
