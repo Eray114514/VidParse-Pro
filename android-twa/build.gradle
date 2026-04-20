@@ -6,6 +6,6 @@ buildscript {
         maven { url "https://maven.mozilla.org/maven2" }
     }
     dependencies {
-        classpath 'com.android.tools.build:gradle:8.0.2'
+        classpath 'com.android.tools.build:gradle:8.2.2'
     }
 }
