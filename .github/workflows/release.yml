@@ -116,41 +116,14 @@ jobs:
           npm version $VERSION --no-git-tag-version --allow-same-version
           jq '.version = "'$VERSION'"' src-tauri/tauri.conf.json > temp.json && mv temp.json src-tauri/tauri.conf.json
 
-      - name: Build TWA Android App
-        run: |
-          # Copy custom icons
-          cp -r src-tauri/icons/android/* android-twa/app/src/main/res/
-          
-          cd android-twa
-          chmod +x gradlew
-           APP_VERSION=$VERSION ./gradlew assembleRelease
-
-      - name: Sign APK
-        run: |
-          VERSION=${GITHUB_REF_NAME#v}
-          APK_PATH=$(find android-twa/app/build/outputs/apk/release -name "*.apk" -type f | head -n 1)
-          echo "Found APK: $APK_PATH"
-          
-          BUILD_TOOLS=$(ls -d $ANDROID_HOME/build-tools/* | sort -V | tail -1)
-          echo "Using Build Tools: $BUILD_TOOLS"
-          
-          $BUILD_TOOLS/zipalign -v -p 4 "$APK_PATH" aligned.apk
-          $BUILD_TOOLS/apksigner sign --ks src-tauri/android-release.keystore \
-            --ks-pass pass:android \
-            --ks-key-alias androidreleasekey \
-            --key-pass pass:android \
-            --out VidParse-Pro-Android-v${VERSION}.apk \
-            aligned.apk
-            
-          $BUILD_TOOLS/apksigner verify -v VidParse-Pro-Android-v${VERSION}.apk
-          
-          mkdir -p release-apk
-          mv VidParse-Pro-Android-v${VERSION}.apk release-apk/
-
-      - name: Upload Release
-        uses: softprops/action-gh-release@v1
-        with:
-          tag_name: ${{ github.ref_name }}
-          files: release-apk/VidParse-Pro-Android-v*.apk
+      - name: Build Tauri Windows/macOS/Linux App
+        uses: tauri-apps/tauri-action@v0
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tagName: v__VERSION__
+          releaseName: "VidParse Pro v__VERSION__"
+          releaseBody: "See the assets to download this version and install."
+          releaseDraft: true
+          prerelease: false
+          args: ${{ matrix.args }}
