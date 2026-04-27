@@ -116,6 +116,45 @@ jobs:
           npm version $VERSION --no-git-tag-version --allow-same-version
           jq '.version = "'$VERSION'"' src-tauri/tauri.conf.json > temp.json && mv temp.json src-tauri/tauri.conf.json
 
+      - name: Build Native Android App
+        run: |
+          cd android-app
+          chmod +x gradlew
+          ./gradlew assembleRelease
+
+      - name: Sign APK
+        run: |
+          VERSION=${GITHUB_REF_NAME#v}
+          APK_PATH=$(find android-app/app/build/outputs/apk/release -name "*.apk" -type f | head -n 1)
+          
+          if [ -n "$APK_PATH" ]; then
+            echo "Found APK at: $APK_PATH"
+            BUILD_TOOLS_DIR=$(ls -d $ANDROID_HOME/build-tools/* | tail -1)
+            
+            $BUILD_TOOLS_DIR/zipalign -v -p 4 "$APK_PATH" "VidParse-Pro-${VERSION}-aligned.apk"
+            
+            echo "${{ secrets.ANDROID_KEYSTORE_BASE64 }}" | base64 -d > release.keystore
+            
+            $BUILD_TOOLS_DIR/apksigner sign --ks release.keystore \
+              --ks-key-alias "${{ secrets.ANDROID_KEY_ALIAS }}" \
+              --ks-pass "pass:${{ secrets.ANDROID_KEYSTORE_PASSWORD }}" \
+              --key-pass "pass:${{ secrets.ANDROID_KEY_PASSWORD }}" \
+              --out "VidParse-Pro-${VERSION}-signed.apk" \
+              "VidParse-Pro-${VERSION}-aligned.apk"
+              
+            echo "SIGNED_APK=VidParse-Pro-${VERSION}-signed.apk" >> $GITHUB_ENV
+          else
+            echo "Error: APK not found!"
+            exit 1
+          fi
+
+      - name: Upload Android Release Asset
+        uses: softprops/action-gh-release@v1
+        with:
+          files: ${{ env.SIGNED_APK }}
+          draft: true
+          prerelease: false
+
       - name: Build Tauri Windows/macOS/Linux App
         uses: tauri-apps/tauri-action@v0
         env:
